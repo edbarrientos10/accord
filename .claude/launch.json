@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "accord-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "--", "--hostname", "127.0.0.1", "--port", "3102"],
+      "env": { "ACCORD_DEMO": "true", "ACCORD_ORIGIN": "http://127.0.0.1:3102" },
+      "port": 3102
+    }
+  ]
+}

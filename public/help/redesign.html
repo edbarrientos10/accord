@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Projects, tasks, and decisions · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#workspace">Workspace</a><a href="#task-contract">Task contract</a
+            ><a href="#new-commands-and-state">New commands and state</a
+            ><a href="#upgrade-and-recovery">Upgrade and recovery</a
+            ><a href="#design-implementation">Design implementation</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#workspace">Workspace</a><a href="#task-contract">Task contract</a
+            ><a href="#new-commands-and-state">New commands and state</a
+            ><a href="#upgrade-and-recovery">Upgrade and recovery</a
+            ><a href="#design-implementation">Design implementation</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/redesign.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="projects-tasks-and-decisions">Projects, tasks, and decisions</h1>
+        <p>
+          Accord is a personal workspace for one human owner and their agents. The UI uses task
+          terminology; the existing <code>workstreams</code> records, IDs, command names, and
+          credential assignments remain the compatibility contract.
+        </p>
+        <h2 id="workspace">Workspace</h2>
+        <ul>
+          <li>
+            <strong>Today</strong> prioritizes uncertain/failed executions and source conflicts,
+            approvals and completion reviews, blockers, then due follow-ups. A task has one
+            follow-up with all applicable reasons; independent proposals have their own decision
+            items. Snoozed items have a separate queue. <strong>Dismiss</strong> closes a task as
+            dismissed with a reason; closed tasks and their linked People reminders leave Today
+            until reopened. People dismissal cancels optional commitments, human-waives required
+            commitments, pauses contact cadence, or disables an important date. See the
+            <a href="user-guide.html#dismiss-work-you-no-longer-need">user guide</a>.
+          </li>
+          <li>
+            <strong>Tasks</strong> offers lists and boards. Search, status, owner, priority,
+            project, view, and selected task are URL parameters. Task panels have full-page links.
+          </li>
+          <li>
+            <strong>Projects</strong> group tasks and display completed/total task counts. Archiving
+            a project never completes its tasks, revokes permissions, or hides attention.
+          </li>
+          <li>
+            <strong>Routines</strong> report externally scheduled operations, attempts, evidence and
+            recovery tasks. They do not start an agent scheduler.
+          </li>
+          <li>
+            <strong>Agents</strong> manages identities and scoped credentials. Assignment records
+            work for API/MCP clients to retrieve; it does not launch a runtime.
+          </li>
+          <li><strong>Settings</strong> holds scoped private exports and two-factor enrollment.</li>
+        </ul>
+        <p>
+          Old <code>/workstreams</code>, <code>/workstreams/:id</code>, <code>/operations</code>,
+          <code>/operations/:id</code>, <code>/inbox</code>, and <code>/overview</code> links
+          redirect to their new equivalents. The former Inbox and Overview both become Today.
+        </p>
+        <h2 id="task-contract">Task contract</h2>
+        <p>Optional additions to <code>Workstream</code> and its create/update commands:</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Field reference table 1">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Values/default</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>projectId</code></td>
+                <td>Project UUID or null; defaults to no project</td>
+              </tr>
+              <tr>
+                <td><code>priority</code></td>
+                <td>
+                  <code>none</code>, <code>low</code>, <code>medium</code>, <code>high</code>,
+                  <code>urgent</code>; defaults to none
+                </td>
+              </tr>
+              <tr>
+                <td><code>dueDate</code></td>
+                <td>
+                  Calendar date <code>YYYY-MM-DD</code> or null; independent of
+                  <code>reviewAt</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>planningStage</code></td>
+                <td>
+                  <code>todo</code> or <code>in_progress</code>; applies when lifecycle is
+                  <code>open</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>completionPolicy</code></td>
+                <td>
+                  <code>simple</code> or <code>verified</code>; legacy create defaults to verified
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The redesigned task form explicitly selects simple completion by default. Title-only
+          creation uses the title as the initial desired outcome; users may edit the description. It
+          uses the human owner unless another owner is chosen. Choosing an agent owner adds that
+          agent to task assignments, but credentials need their own explicit assignment in Selected
+          records mode; workspace tokens cover current and future tasks.
+        </p>
+        <p>
+          Simple tasks can have zero criteria. The human owner or an assigned agent who owns the
+          task, or a workspace agent with workstream.close, can complete them. Completion records
+          the actor and reason and does not claim verified evidence. Verified tasks still require
+          criteria and trusted evidence or explicit human acceptance. Both modes refuse completion
+          while blocked, with running/uncertain executions, or with conflicting references. Only the
+          human changes the outcome, completion policy, or criteria. Workspace agents with
+          workstream.update and workstream.manage may change ownership, assignments, or project.
+        </p>
+        <p>
+          Board controls use the shared lifecycle commands. Moving to Done invokes completion;
+          moving out of Blocked requires resolution; returning a review requires feedback; reopening
+          a terminal task requires a human or a workspace agent with workstream.reopen and an
+          attributable reason. Keyboard and mobile users can use the same transitions through status
+          menus.
+        </p>
+        <h2 id="new-commands-and-state">New commands and state</h2>
+        <p>
+          <code>State</code> adds <code>projects</code>, <code>decisions</code>, and
+          <code>reminders</code> arrays. All mutations retain entity-version checks, workspace
+          compare-and-swap, content-bound idempotency, and attributable audit events.
+        </p>
+        <ul>
+          <li>
+            <code>project.create</code>: name, optional description and target calendar date,
+            reason.
+          </li>
+          <li>
+            <code>project.update</code>: entityId, expectedVersion, optional name/description/
+            targetDate/status (<code>active</code> or <code>archived</code>), reason.
+          </li>
+          <li>
+            <code>decision.respond</code>: entityId, expectedVersion, response (<code
+              >declined</code
+            >
+            or <code>changes_requested</code>), nonempty feedback and reason. Proposal responses
+            close the request; the next request must use a new immutable proposal revision.
+            Completion reviews support only <code>changes_requested</code>, returning the task to
+            open/in progress. Existing <code>grant.approve</code> and
+            <code>workstream.close</code> record approval/acceptance decisions as part of their
+            transactions.
+          </li>
+          <li>
+            <code>reminder.snooze</code>: subject entityId (task, proposal, routine),
+            expectedVersion, future <code>until</code>, reason. Records are unique per subject and
+            human in normal command execution. The reminder does not change deadlines or authority.
+          </li>
+          <li>
+            <code>reminder.clear</code>: reminder entityId, expectedVersion, reason; expires the
+            reminder while preserving its history.
+          </li>
+        </ul>
+        <p>
+          All new management commands are human-only. Authorized agents read decision feedback
+          through <code>accord_query</code>. They see project context only for explicitly accessible
+          tasks, never other tasks merely because they share a project. Project audit events and
+          personal snoozes are not included in agent views.
+        </p>
+        <p>
+          A snooze is valid only for its subject version and until its timestamp. New attempts,
+          evidence, grants or decision feedback on related work expire the reminder even when the
+          parent&#39;s own version did not change. Resolution and supersession remove the
+          corresponding item from the queue.
+        </p>
+        <h2 id="upgrade-and-recovery">Upgrade and recovery</h2>
+        <ol>
+          <li>Back up the existing installation with its currently deployed version.</li>
+          <li>
+            Review <code>202610260001_projects_decisions.sql</code> against a staging copy. It adds
+            three tables, project membership, owner-read RLS, an append-only decision trigger, and
+            updated snapshot/commit functions.
+          </li>
+          <li>
+            Apply all repository migrations before starting the redesigned application. For a linked
+            managed project, review <code>supabase db push --dry-run</code> first; applying to a
+            hosted project is a separate authorized release step.
+          </li>
+          <li>
+            Verify legacy IDs, versions, grants, evidence, history, and file paths. Old tasks
+            receive verified completion, no project/priority/due date, and To do planning stage
+            without changing their lifecycle or historical events.
+          </li>
+          <li>
+            Exercise create, assignment, approval, feedback, snooze, both completion modes, exports
+            and agent-scoped reads against the upgraded staging instance.
+          </li>
+        </ol>
+        <p>
+          The redesign introduced <code>accord.v2</code>; current People-enabled archives use
+          <code>accord.v3</code>. The importer accepts both <code>accord.v1</code> and
+          <code>accord.v2</code>, supplying safe legacy defaults. A selected project export includes
+          its tasks; an individual task export includes project context without unrelated tasks.
+          Restore still requires an empty installation, remaps the owner, preserves private evidence
+          checksums, and excludes credentials.
+        </p>
+        <p>
+          Do not downgrade the application against new simple tasks: the old application has no
+          simple-completion semantics. Recover with the previous backup into an isolated
+          installation if rollback is needed. No destructive down migration is provided. Local
+          PGlite tests validate the upgrade and recovery paths; hosted Supabase, RLS, Auth, Storage,
+          and SMTP gates remain separate.
+        </p>
+        <h2 id="design-implementation">Design implementation</h2>
+        <p>
+          Self-hosted Manrope, IBM Plex Sans, and IBM Plex Mono come from the installed Fontsource
+          packages; the browser does not contact a font service. The shell, data provider, command
+          adapters, task views, decisions, routines, identities, and settings are separate modules.
+          Shared tokens live in <code>globals.css</code>.
+        </p>
+        <p>
+          The fictional preview is read-only in both UI and server routes. It contains no real
+          accounts or connected services. Browser mutations are validated using fictional API
+          fixtures backed by the real domain command service.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/redesign.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

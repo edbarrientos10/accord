@@ -1,0 +1,80 @@
+name: Disposable installation
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: installation-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  installation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ACCORD_DISPOSABLE_SMOKE: 'true'
+      ACCORD_DEMO: 'false'
+      ACCORD_ORIGIN: http://127.0.0.1:3000
+      ACCORD_OWNER_EMAIL: owner@example.test
+      ACCORD_OWNER_PASSWORD: Fictional-ci-only-password-123!
+      ACCORD_OWNER_NAME: Fictional owner
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install fixed local Supabase CLI
+        run: npm install --prefix "$RUNNER_TEMP/supabase-cli" supabase@2.58.5
+      - name: Start disposable source and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$RUNNER_TEMP/supabase-cli/node_modules/.bin:$PATH"
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor > "$RUNNER_TEMP/source-start.log" 2>&1 || { rg -i "error|failed|fatal" "$RUNNER_TEMP/source-start.log"; exit 1; }
+          supabase status -o env > "$RUNNER_TEMP/source.env"
+          source "$RUNNER_TEMP/source.env"
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          npm run bootstrap
+          npm run build
+          npm run start -- --hostname 127.0.0.1 > "$RUNNER_TEMP/app.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/app.pid"
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail "$ACCORD_ORIGIN/help/index.html" > /dev/null; then break; fi
+            sleep 1
+          done
+          node --import tsx scripts/publication-smoke.ts seed
+          kill "$(cat "$RUNNER_TEMP/app.pid")"
+          supabase stop --no-backup
+      - name: Restore into a separate installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$RUNNER_TEMP/supabase-cli/node_modules/.bin:$PATH"
+          destination="$RUNNER_TEMP/accord-restore"
+          mkdir -p "$destination/supabase"
+          cp -R supabase/migrations "$destination/supabase/"
+          sed 's/project_id = "accord"/project_id = "accord-restore"/' supabase/config.toml > "$destination/supabase/config.toml"
+          supabase start --workdir "$destination" -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor > "$RUNNER_TEMP/destination-start.log" 2>&1 || { rg -i "error|failed|fatal" "$RUNNER_TEMP/destination-start.log"; exit 1; }
+          supabase status --workdir "$destination" -o env > "$RUNNER_TEMP/destination.env"
+          source "$RUNNER_TEMP/destination.env"
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          npm run bootstrap
+          node --import tsx scripts/publication-smoke.ts restore
+      - name: Remove disposable installations
+        if: always()
+        shell: bash
+        run: |
+          export PATH="$RUNNER_TEMP/supabase-cli/node_modules/.bin:$PATH"
+          supabase stop --no-backup || true
+          if test -d "$RUNNER_TEMP/accord-restore/supabase"; then
+            supabase stop --no-backup --workdir "$RUNNER_TEMP/accord-restore" || true
+          fi

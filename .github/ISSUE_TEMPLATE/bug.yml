@@ -1,0 +1,10 @@
+name: Bug report
+description: Report a reproducible problem using fictional data.
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Include expected behavior and relevant details. Never include credentials, private records, or security exploit details.
+    validations:
+      required: true

@@ -1,0 +1,9 @@
+package-lock.json
+.next
+node_modules
+test-results
+playwright-report
+LICENSE
+next-env.d.ts
+backups
+.env*

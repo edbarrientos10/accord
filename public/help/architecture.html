@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Domain and architecture · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#sources-of-truth">Sources of truth</a
+            ><a href="#transaction-model">Transaction model</a
+            ><a href="#authority-and-evidence">Authority and evidence</a
+            ><a href="#security-boundaries">Security boundaries</a
+            ><a href="#extension-contracts">Extension contracts</a
+            ><a href="#projecttask-redesign">Project/task redesign</a
+            ><a href="#persistent-navigation-frame">Persistent navigation frame</a
+            ><a href="#people">People</a
+            ><a href="#bounded-activity-reads-and-request-diagnostics"
+              >Bounded activity reads and request diagnostics</a
+            ><a href="#workspace-agent-authorization">Workspace agent authorization</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#sources-of-truth">Sources of truth</a
+            ><a href="#transaction-model">Transaction model</a
+            ><a href="#authority-and-evidence">Authority and evidence</a
+            ><a href="#security-boundaries">Security boundaries</a
+            ><a href="#extension-contracts">Extension contracts</a
+            ><a href="#projecttask-redesign">Project/task redesign</a
+            ><a href="#persistent-navigation-frame">Persistent navigation frame</a
+            ><a href="#people">People</a
+            ><a href="#bounded-activity-reads-and-request-diagnostics"
+              >Bounded activity reads and request diagnostics</a
+            ><a href="#workspace-agent-authorization">Workspace agent authorization</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/architecture.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="domain-and-architecture">Domain and architecture</h1>
+        <h2 id="sources-of-truth">Sources of truth</h2>
+        <p>
+          Accord owns coordination: desired outcomes, next actions, authority, history, and closure
+          evidence. External systems retain their specialized objects. References identify the
+          system, object, responsibility, observed status and check time. Conflicts are recorded for
+          owner reconciliation. No automatic task import, chat surveillance, external URL fetching,
+          or universal sync occurs.
+        </p>
+        <h2 id="transaction-model">Transaction model</h2>
+        <p>
+          Web and API commands use <code>src/domain/service.ts</code>; MCP tools call the same
+          service. Zod schemas reject unknown command fields. Clients cannot provide the actor. The
+          server resolves it from a Supabase owner session or a hashed opaque token.
+        </p>
+        <p>
+          PostgreSQL stores workspaces, identities, workstreams, operations, actions, grants,
+          executions, evidence, audit events and idempotency records in separate tables. Foreign
+          keys retain workspace and parent relationships. Each current record contains a validated,
+          extensible JSON payload alongside relational keys, version and relevant indexed fields.
+        </p>
+        <p>
+          A command loads a consistent snapshot, validates it, and submits the resulting state with
+          its expected workspace revision. The commit RPC locks the workspace, checks the revision
+          and credential, and writes current records, every material audit event, and the retry
+          result in one transaction. A competing write causes reevaluation; stale entity versions
+          still fail. This deliberately serializes writes within a personal workspace and rewrites
+          its current records. It is not full event sourcing, and it is not optimized for
+          enterprise-scale histories.
+        </p>
+        <p>
+          Idempotency is actor-scoped and content-bound. Preserve a retry key for the same intent;
+          different content with that key fails. Database failures commit no partial domain state.
+          Object storage cannot share the database transaction: an upload interrupted before
+          attachment can leave an unregistered private file. Do not delete such files without
+          checking current references and active uploads.
+        </p>
+        <h2 id="authority-and-evidence">Authority and evidence</h2>
+        <p>
+          Only the human owner grants execution authority or changes existing task criteria.
+          Workspace agents with explicit management capabilities may organize assignments. One-time
+          approval names one immutable action revision. Standing permission names exact operations
+          and targets, grantee, validity, maximum uses and optional declared cost limit. Starting an
+          attempt consumes usage atomically, even if it fails. It never executes the external action
+          itself.
+        </p>
+        <p>
+          Running and uncertain attempts block another attempt for that action or operation.
+          Reconciliation needs accepted evidence tied to the attempt. A one-time grant stays
+          consumed after reconciliation; repeating needs new human authority. Results distinguish
+          observed success, partial success, failure and uncertainty from evidence verification.
+        </p>
+        <p>
+          Evidence starts unverified. The human can accept it; a separately provisioned integration
+          with <code>evidence.verify</code> may independently attest evidence in its explicit
+          assignments. Agent credentials cannot receive that capability, and integrations cannot
+          attest their own attempt. Integration verification is an authenticated assertion by that
+          configured verifier, not a universal guarantee that external content is correct. Initial
+          use relies on human acceptance.
+        </p>
+        <p>
+          Assigned agents may close when every criterion has trusted evidence and no blocker,
+          active/uncertain attempt, or external conflict remains. Human closure records criterion
+          evidence or explicit attributable confirmation. Sending a proposal does not establish
+          acceptance. Completion, cancellation and dismissal are distinct; corrections retain
+          history. Invalidating accepted evidence returns a completed workstream to review.
+        </p>
+        <h2 id="security-boundaries">Security boundaries</h2>
+        <p>
+          One explicitly installed human owner per instance; third parties have no login. Agents and
+          verifier integrations have distinct identities and credentials. Tokens expire in 90 days
+          by default and are displayed once, hashed at rest, explicitly scoped/assigned, and checked
+          for revocation on every request and at domain transaction commit. Supabase validates human
+          sessions; verified MFA factors require an <code>aal2</code> session.
+        </p>
+        <p>
+          RLS allows owner reads and denies direct client writes. Agent access goes only through the
+          controlled API/MCP service. Credential tables are unavailable to clients. Private Storage
+          has no public or client policies; authorized downloads use 60-second links. URLs and
+          document contents cannot change authority. React renders content as text and references
+          accept HTTP(S) only.
+        </p>
+        <p>
+          The service-role key is privileged. Compromise of the server or that key bypasses these
+          application guarantees. No guarantee is made about actions performed outside Accord,
+          external cost declarations, or reversing external effects. Application error responses
+          redact provider internals; application code does not log request bodies, tokens or
+          evidence. Audit history is private data.
+        </p>
+        <h2 id="extension-contracts">Extension contracts</h2>
+        <p>
+          Add integration identities and narrowly scoped adapters without importing a runtime into
+          the domain. An adapter may report observations or verify evidence within its assignment.
+          Scheduling controls require a real adapter capability; v1 has none. Additional clients
+          must call the same command service rather than write tables. See the generated API schemas
+          for validation and effects.
+        </p>
+        <h2 id="projecttask-redesign">Project/task redesign</h2>
+        <p>
+          Projects group existing workstreams without changing record identifiers or authority
+          boundaries. Separate planning stage and completion-policy fields extend the task contract;
+          lifecycle commands still enforce blockers, execution uncertainty, criteria and ownership.
+          Immutable decision records and version-bound reminders are included in the atomic snapshot
+          transaction. Project context is filtered through existing task assignments. See
+          <a href="redesign.html">redesign</a> for the public contract, archive compatibility,
+          upgrade sequence, and UI architecture.
+        </p>
+        <h2 id="persistent-navigation-frame">Persistent navigation frame</h2>
+        <p>
+          The root layout owns <code>WorkspaceFrame</code>, which retains the workspace provider,
+          auth subscription, loaded data, and application shell across menu navigation. The
+          catch-all page renders only the selected feature view. The initial loading screen appears
+          when opening the app, rather than on every section change. Commands and the explicit
+          refresh control reload the shared snapshot. Route changes clear transient dialogs,
+          notices, and newly issued credential displays; signing out clears the workspace and cached
+          credentials.
+        </p>
+        <h2 id="people">People</h2>
+        <p>
+          The People domain extends the same command/snapshot transaction. Profiles share
+          third-party identity IDs; they never become authentication principals. Directory
+          permissions and task assignments remain independent. Relationship reminders are pure
+          timezone-aware projections shared by Today, REST and MCP. See
+          <a href="people.html">People</a> for lifecycle, import, permission and migration details.
+        </p>
+        <h2 id="bounded-activity-reads-and-request-diagnostics">
+          Bounded activity reads and request diagnostics
+        </h2>
+        <p>
+          The current snapshot function excludes audit_events entirely. UI state reads,
+          authentication, and domain commands use it; commands commit only the newly produced audit
+          events. Legacy full snapshots remain for compatibility and archives. The immutable audit
+          insert trigger creates compact activity_log summaries in the same transaction. Independent
+          failed-attempt writes use the same owner-only indexed feed without altering domain state
+          or revision.
+        </p>
+        <p>
+          The log API uses keyset pagination and indexed filters. A page never contains before/after
+          snapshots; detail retrieval reads one event by workspace and ID. Failed REST/MCP calls are
+          observed at the interface boundary, including MCP SDK input validation. Attempt metadata
+          is allowlisted and size bounded. A timed-out log sink cannot replace the original error.
+          See <a href="logs.html">Logs</a> for details.
+        </p>
+        <h2 id="workspace-agent-authorization">Workspace agent authorization</h2>
+        <p>
+          Credential <code>access_mode</code> defaults to <code>assigned</code>. The optional
+          <code>Actor.accessMode</code> defaults to assigned semantics for legacy callers. Shared
+          record-access checks allow workspace agents across current and future records, while exact
+          command capabilities, field-level safeguards, execution grants, and People scopes remain
+          independent. The same checks serve REST and MCP, command retries, linked People context,
+          and authorized state projections. Workspace management never converts an agent into a
+          human owner. Agent archive exports and indexed Logs remain forbidden.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/architecture.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

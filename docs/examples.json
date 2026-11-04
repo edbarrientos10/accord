@@ -1,0 +1,129 @@
+{
+  "notice": "Fictional schema-valid input examples. Replace IDs, versions, dates, and facts using authorized current state. These are not authority to act.",
+  "examples": [
+    {
+      "command": "workstream.update",
+      "input": {
+        "entityId": "00000000-0000-4000-8000-000000000010",
+        "expectedVersion": 1,
+        "reportedProgress": "Prepared the draft for review.",
+        "reason": "Recorded preparation"
+      }
+    },
+    {
+      "command": "action.propose",
+      "input": {
+        "workstreamId": "00000000-0000-4000-8000-000000000010",
+        "expectedVersion": 2,
+        "operation": "email.send",
+        "effect": "Ask the venue for availability",
+        "target": "venue@example.com",
+        "content": "Hello, is the venue available on January 20?",
+        "scope": "One availability inquiry; no booking or purchase",
+        "expiresAt": "2099-01-15T18:00:00Z",
+        "declaredCost": 0,
+        "currency": "USD",
+        "reason": "Request review of exact inquiry"
+      }
+    },
+    {
+      "command": "action.request_approval",
+      "input": {
+        "entityId": "00000000-0000-4000-8000-000000000020",
+        "expectedVersion": 1,
+        "reason": "Exact inquiry ready for human decision"
+      }
+    },
+    {
+      "command": "execution.start",
+      "input": {
+        "actionId": "00000000-0000-4000-8000-000000000020",
+        "expectedVersion": 3,
+        "grantId": "00000000-0000-4000-8000-000000000030",
+        "reason": "Reserve approved inquiry before external execution"
+      }
+    },
+    {
+      "command": "execution.report",
+      "input": {
+        "entityId": "00000000-0000-4000-8000-000000000040",
+        "expectedVersion": 1,
+        "state": "uncertain",
+        "result": "Provider timed out; delivery has not been established.",
+        "reason": "Preserve uncertainty pending provider lookup"
+      }
+    },
+    {
+      "command": "evidence.attach",
+      "input": {
+        "workstreamId": "00000000-0000-4000-8000-000000000010",
+        "expectedVersion": 3,
+        "executionId": "00000000-0000-4000-8000-000000000040",
+        "criterionIds": [],
+        "title": "Provider lookup",
+        "description": "Observed provider record associated with the attempt.",
+        "provenance": "Read-only provider lookup; attach actual reference in a real request",
+        "reason": "Submit evidence for human acceptance"
+      }
+    },
+    {
+      "command": "workstream.close",
+      "input": {
+        "entityId": "00000000-0000-4000-8000-000000000010",
+        "expectedVersion": 5,
+        "evidenceIds": [],
+        "reason": "Finished simple task; all closure checks satisfied"
+      }
+    },
+    {
+      "command": "person.create",
+      "input": { "name": "Alex Example", "reason": "Record a contact requested by the owner" }
+    },
+    {
+      "command": "interaction.log",
+      "input": {
+        "personId": "00000000-0000-4000-8000-000000000050",
+        "occurredAt": "2026-10-26T09:00:00-06:00",
+        "channel": "call",
+        "summary": "Discussed venue options in an observed call.",
+        "meaningful": true,
+        "reason": "Record observed interaction"
+      }
+    },
+    {
+      "command": "important_date.create",
+      "input": {
+        "personId": "00000000-0000-4000-8000-000000000050",
+        "title": "Birthday",
+        "kind": "birthday",
+        "month": 2,
+        "day": 29,
+        "year": null,
+        "annual": true,
+        "advance": false,
+        "reason": "Record supplied month and day without inferring year"
+      }
+    },
+    {
+      "command": "commitment.create",
+      "input": {
+        "personId": "00000000-0000-4000-8000-000000000050",
+        "direction": "waiting_on",
+        "title": "Send venue availability",
+        "coordinatorId": "00000000-0000-4000-8000-000000000002",
+        "required": false,
+        "reason": "Record request without implying agreement"
+      }
+    },
+    {
+      "command": "commitment.transition",
+      "input": {
+        "entityId": "00000000-0000-4000-8000-000000000060",
+        "expectedVersion": 2,
+        "status": "fulfilled",
+        "note": "Received and reviewed the promised availability document.",
+        "reason": "Confirm an already committed outcome"
+      }
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Validation and pilot acceptance · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#mit-preview-preparation">MIT preview preparation</a
+            ><a href="#local-evidence">Local evidence</a
+            ><a href="#hosted-release-gates">Hosted release gates</a
+            ><a href="#scenarios-af">Scenarios A–F</a
+            ><a href="#pilot-observations">Pilot observations</a
+            ><a href="#people-module-validation">People module validation</a
+            ><a href="#activity-log-validation">Activity log validation</a
+            ><a href="#today-dismissal-validation">Today dismissal validation</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#mit-preview-preparation">MIT preview preparation</a
+            ><a href="#local-evidence">Local evidence</a
+            ><a href="#hosted-release-gates">Hosted release gates</a
+            ><a href="#scenarios-af">Scenarios A–F</a
+            ><a href="#pilot-observations">Pilot observations</a
+            ><a href="#people-module-validation">People module validation</a
+            ><a href="#activity-log-validation">Activity log validation</a
+            ><a href="#today-dismissal-validation">Today dismissal validation</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/validation.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="validation-and-pilot-acceptance">Validation and pilot acceptance</h1>
+        <h2 id="mit-preview-preparation">MIT preview preparation</h2>
+        <p>
+          The source preview was validated on 2026-11-04 with 119 unit/database/API/MCP tests and
+          111 browser tests passing, with one intentional mobile skip for a desktop-only scenario.
+          Formatting, documentation freshness, TypeScript, schema consistency, production build and
+          dependency audit passed. A clean source snapshot completed a locked dependency install and
+          rendered the credential-free fictional demo.
+        </p>
+        <p>
+          The disposable installation check runs real local Supabase on a Docker-enabled GitHub
+          Actions runner with fictional credentials. It verifies owner bootstrap/login, public
+          signup denial, REST task creation, generic MCP proposal and human approval, private
+          evidence access and token revocation. Backup and restore into a separately bootstrapped
+          destination verify records, audit retention, evidence checksums, old credential exclusion
+          and fresh credential authentication. Both installations are removed.
+        </p>
+        <p>
+          See <a href="https://github.com/edbarrientos10/accord/actions">public CI runs</a> for
+          results on specific commits. These checks do not establish managed Supabase, SMTP, TOTP or
+          production readiness.
+        </p>
+        <h2 id="local-evidence">Local evidence</h2>
+        <p>
+          Redesign, People, Logs, and documentation validation on 2026-10-26:
+          <strong
+            >85 domain/database/API/auth/storage/MCP/documentation checks and 50 desktop/mobile
+            browser checks passed</strong
+          >, along with TypeScript, source formatting, and the optimized production build. These are
+          local checks with fictional fixtures; they do not imply hosted release acceptance.
+        </p>
+        <p>
+          Documentation checks cover public Help without authentication or private API reads,
+          keyboard navigation, mobile layouts, automated accessibility, local links and anchors, all
+          REST routes and command roles, schema-valid fictional examples, and generated-file
+          freshness. Help screenshots were visually inspected on desktop and mobile.
+        </p>
+        <p>
+          The dependency audit now reports <strong>zero known vulnerabilities</strong>, including
+          production and development dependencies. Zod was upgraded to <strong>4.6.7</strong> to fix
+          <a href="https://github.com/advisories/GHSA-mrhx-c7xc-m3w5">GHSA-mrhx-c7xc-m3w5</a>. All
+          resolved Zod consumers, including the MCP SDK, use the patched version; no advisory is
+          suppressed. The existing CI dependency-audit command passes.
+        </p>
+        <p>
+          Zod migration checks verify early rejection of oversized constrained arrays before element
+          traversal, legacy UUID-like identifiers, request defaults and strict fields, custom domain
+          refinements, OpenAPI input schemas, MCP tool schemas over HTTP, and the existing
+          validation-error envelope. OpenAPI uses Zod 4&#39;s native JSON Schema exporter in input
+          mode so defaulted fields remain optional for clients.
+        </p>
+        <ul>
+          <li>TypeScript and optimized Next.js production build are checked independently.</li>
+          <li>
+            Domain tests exercise assistance, bounded approvals, recurring incidents, partial
+            results, evidence-based closure, uncertainty and stale versions.
+          </li>
+          <li>
+            Actual PostgreSQL migrations run in PGlite: foreign keys, transactional rollback,
+            revision compare-and-swap, idempotency, owner read isolation, denied client writes,
+            credential issuance/revocation, and immutable audit.
+          </li>
+          <li>
+            A generic SDK client connects over actual stateless MCP HTTP transport, queries,
+            proposes, requests approval, receives domain errors and observes token rejection. Its
+            HTTP authentication fixture is fictional; separate authentication tests exercise the
+            production credential validator with controlled Supabase responses.
+          </li>
+          <li>
+            Desktop and mobile browser tests render the real application and use fictional API
+            fixtures backed by the shared domain service. They cover creation, blockers,
+            exact-content approvals, explicit human closure and horizontal overflow. They do not
+            prove hosted Auth, Storage, or SMTP.
+          </li>
+          <li>
+            The populated v1 upgrade fixture includes existing task IDs, versions, assignments,
+            source references, exact proposals, grants, executions, evidence, and audit history. It
+            verifies preservation and continued verified-completion requirements after the additive
+            migration.
+          </li>
+          <li>
+            Redesign checks cover project isolation, simple/verified completion, human-only
+            requirement changes, approval feedback and superseded revisions, reminder
+            expiry/material invalidation, stale versions, idempotency, and v1/v2 archives.
+          </li>
+          <li>
+            Browser journeys cover desktop and mobile creation, assignment, URL filters, list/board
+            status menus, exact-content approval, revision feedback/decline, snoozing, blockers,
+            both completion modes, long content, empty filters, failed saves, recovery, keyboard
+            focus restoration, and the read-only preview.
+          </li>
+          <li>
+            Navigation regression checks retain the same application shell and loaded snapshot
+            across every menu section and browser Back/Forward on desktop and mobile. Explicit
+            refresh still reloads data without replacing the shell.
+          </li>
+          <li>
+            Automated axe checks found no WCAG A/AA violations on the core screens,
+            sign-in/recovery, and the long-content task panel. This is not a substitute for a
+            complete assistive-technology audit. Reduced-motion rendering and horizontal overflow
+            are checked. Screenshots are generated in <code>test-results/</code> and visually
+            reviewed for desktop and mobile layouts.
+          </li>
+          <li>
+            The dependency audit is part of CI. The lockfile fixes the tested versions. Browser
+            tests use an isolated local server on port 3101 (override with
+            <code>ACCORD_TEST_PORT</code>), leaving other development servers untouched.
+          </li>
+        </ul>
+        <h2 id="hosted-release-gates">Hosted release gates</h2>
+        <p>
+          Record the exact Supabase project, Vercel team/project, commit and deployment in a private
+          pilot record. Do not store credentials, live download/authentication URLs or private
+          evidence in this repository.
+        </p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Gate reference table 1">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Gate</th>
+                <th scope="col">Required evidence</th>
+                <th scope="col">Initial status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Owner setup</td>
+                <td>Explicit bootstrap, public signup denied, foreign account denied</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Authentication</td>
+                <td>Login, logout, recovery email, TOTP enrollment and AAL enforcement</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Database boundary</td>
+                <td>Hosted RLS isolation and denied direct mutations/RPC access</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Storage</td>
+                <td>Private upload/download, unauthorized access denied, checksums intact</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Client parity</td>
+                <td>Web, REST and generic MCP enforce the same restrictions</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Revocation</td>
+                <td>Connected MCP client loses access after token revocation</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Concurrency</td>
+                <td>Two authenticated clients cannot overwrite each other&#39;s decisions</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Recovery</td>
+                <td>Isolated hosted restore includes records, audit and private evidence</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Fresh installation</td>
+                <td>A different person installs and completes the basic MCP workflow</td>
+                <td>Pending</td>
+              </tr>
+              <tr>
+                <td>Usefulness</td>
+                <td>Owner confirms attention, authority and real-work status are clearer</td>
+                <td>Pending</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h2 id="scenarios-af">Scenarios A–F</h2>
+        <p>
+          A: prepare a fictional contract with assistance, hand the next action to the human, record
+          negotiation/acceptance, and close only with evidence or explicit attributable
+          confirmation.
+        </p>
+        <p>
+          B: propose an exact fictional message, request and grant approval, reserve authority, use
+          a controlled provider double, report delivery separately from verification, and keep the
+          outcome waiting for acceptance. Changed content must invalidate the old revision&#39;s
+          authority.
+        </p>
+        <p>
+          C: register an externally scheduled report, grant bounded permission, report normal and
+          failed executions, verify delivery separately, and confirm repeated reports of the same
+          incident retain one resolution workstream.
+        </p>
+        <p>
+          D: develop a fictional project with partial deliveries and ownership changes. An
+          implementation milestone can be accepted while the overall outcome stays open for
+          validation or deployment. Preserve history through handoffs/restarts.
+        </p>
+        <p>
+          E: have two agents update the same version; one must receive a conflict. A controlled
+          provider timeout stays uncertain and cannot trigger another attempt until accepted lookup
+          evidence reconciles it. One-time authority is not renewed automatically.
+        </p>
+        <p>
+          F: a different person installs Accord with fictional examples and a generic MCP client,
+          then queries, proposes, obtains human approval and submits evidence. Record installation
+          problems rather than treating documented steps as proof.
+        </p>
+        <h2 id="pilot-observations">Pilot observations</h2>
+        <p>
+          Record attention-identification difficulty, missing next actions/owners/criteria, stale
+          reports, conflicts, ambiguous approvals, prevented false closures, maintenance effort,
+          recovery, and mobile clarity. Establish a baseline before claiming improvements. Use the
+          UI review dates and explicit material-event updates; do not add passive chat collection to
+          obtain metrics.
+        </p>
+        <h2 id="people-module-validation">People module validation</h2>
+        <p>
+          The People extension adds real populated-migration and RLS checks, independent People
+          credential tests, REST/MCP attention parity, legacy/v3 archive restoration,
+          required-commitment completion gates, attributable transitions, and field-preserving PATCH
+          regressions. Calendar cases cover unknown birth years, leap years, year rollover, timezone
+          boundaries, distinct advance/day-of acknowledgments, cadence inheritance/correction and
+          snooze expiry. Import coverage includes CSV quoting, vCard folding, duplicate candidates,
+          conflicts, invalid input and retry behavior, including a lost response after a successful
+          server commit.
+        </p>
+        <p>
+          Browser journeys cover creation, profile panels, interaction logging, important dates,
+          both commitment workflow controls, reviewed imports, keyboard focus, accessibility,
+          filters, narrow layouts, and persistent navigation through People. Fictional preview
+          screenshots cover Directory, contact profiles, Commitments, Upcoming and Today in both
+          viewport sizes. Local results do not establish hosted Supabase or deployment acceptance.
+        </p>
+        <h2 id="activity-log-validation">Activity log validation</h2>
+        <p>
+          Logs now uses the additive activity-log migration for indexed summaries and independent
+          unsuccessful request records. The 20,000-event database check confirms an unchanged
+          compact snapshot size, bounded pages, stable cursors after new inserts, and an indexed
+          ordered query plan. It also checks owner RLS, append-only records, preserved legacy audit,
+          and delta-only command commits.
+        </p>
+        <p>
+          REST/MCP tests cover SDK input rejection, permissions, malformed requests, service
+          failures, expired/revoked credential attribution, bounded body reading, safe metadata and
+          actor-scoped retry references. Successful retries still avoid duplicate audit events.
+          Desktop/mobile tests inspect rejected attempts, cap the rendered list at 50 rows, fetch
+          details only on selection, and confirm log refreshes never reload workspace state. All 46
+          browser checks passed, including keyboard, accessibility, error and navigation checks.
+          Screenshots were visually inspected. These checks do not measure hosted throughput.
+        </p>
+        <h2 id="today-dismissal-validation">Today dismissal validation</h2>
+        <p>
+          Desktop and mobile browser checks cover dismissing a task with linked reminders, refresh
+          persistence, task reopening, cancellation of optional commitments, human waiver of
+          required commitments, pausing contact cadence and disabling important dates. Domain
+          regressions verify that dismissed/cancelled tasks cannot re-enter Today through linked
+          commitments, that closing the task preserves those commitments’ states, and that reopening
+          restores their queue eligibility. These are local checks; hosted behavior still requires
+          the separate deployment and acceptance gates above.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/validation.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

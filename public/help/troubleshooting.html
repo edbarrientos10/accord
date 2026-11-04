@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Troubleshooting Accord · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#cannot-sign-in">Cannot sign in</a
+            ><a href="#password-recovery-does-not-arrive-or-opens-the-wrong-site"
+              >Password recovery does not arrive or opens the wrong site</a
+            ><a href="#the-agent-sees-no-tasks-or-cannot-update-a-record"
+              >The agent sees no tasks or cannot update a record</a
+            ><a href="#a-command-says-to-reload">A command says to reload</a
+            ><a href="#task-cannot-be-marked-done">Task cannot be marked done</a
+            ><a href="#approval-exists-but-execution-is-rejected"
+              >Approval exists but execution is rejected</a
+            ><a href="#people-reminders-look-unexpected">People reminders look unexpected</a
+            ><a href="#contact-import-partially-succeeded">Contact import partially succeeded</a
+            ><a href="#evidence-upload-or-download-fails">Evidence upload or download fails</a
+            ><a href="#a-failed-attempt-is-missing-from-logs"
+              >A failed attempt is missing from Logs</a
+            ><a href="#workspace-unavailable-after-deployment"
+              >Workspace unavailable after deployment</a
+            ><a href="#request-help-with-useful-evidence">Request help with useful evidence</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#cannot-sign-in">Cannot sign in</a
+            ><a href="#password-recovery-does-not-arrive-or-opens-the-wrong-site"
+              >Password recovery does not arrive or opens the wrong site</a
+            ><a href="#the-agent-sees-no-tasks-or-cannot-update-a-record"
+              >The agent sees no tasks or cannot update a record</a
+            ><a href="#a-command-says-to-reload">A command says to reload</a
+            ><a href="#task-cannot-be-marked-done">Task cannot be marked done</a
+            ><a href="#approval-exists-but-execution-is-rejected"
+              >Approval exists but execution is rejected</a
+            ><a href="#people-reminders-look-unexpected">People reminders look unexpected</a
+            ><a href="#contact-import-partially-succeeded">Contact import partially succeeded</a
+            ><a href="#evidence-upload-or-download-fails">Evidence upload or download fails</a
+            ><a href="#a-failed-attempt-is-missing-from-logs"
+              >A failed attempt is missing from Logs</a
+            ><a href="#workspace-unavailable-after-deployment"
+              >Workspace unavailable after deployment</a
+            ><a href="#request-help-with-useful-evidence">Request help with useful evidence</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/troubleshooting.md">Read Markdown ↗</a
+        ><a href="/llms.txt">Agent discovery ↗</a><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="troubleshooting-accord">Troubleshooting Accord</h1>
+        <p>
+          Start with the exact error, the relevant record, and the time. Logs can distinguish saved
+          changes from failed attempts. Do not share passwords, bearer tokens, recovery links,
+          signed download URLs, or raw private inputs in a support request.
+        </p>
+        <h2 id="cannot-sign-in">Cannot sign in</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Symptom reference table 1">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Symptom</th>
+                <th scope="col">What to check</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fictional preview banner</td>
+                <td>
+                  Set <code>ACCORD_DEMO=false</code> for the installed app and redeploy. The preview
+                  cannot save real work.
+                </td>
+              </tr>
+              <tr>
+                <td>Supabase is not configured</td>
+                <td>
+                  Both public Supabase URL and anonymous key must be available at build time.
+                  Configure them and rebuild.
+                </td>
+              </tr>
+              <tr>
+                <td>Invalid login credentials</td>
+                <td>
+                  Check the selected Supabase project and user email/password. Use password
+                  recovery; do not send the password to an agent.
+                </td>
+              </tr>
+              <tr>
+                <td>Email not confirmed</td>
+                <td>
+                  Inspect the account&#39;s confirmation state in Supabase Auth. Follow the
+                  administrator&#39;s account setup process.
+                </td>
+              </tr>
+              <tr>
+                <td>This account is not an installed workspace owner</td>
+                <td>
+                  Supabase Auth exists, but the Accord workspace/identity mapping is missing or
+                  belongs to another user. Follow the existing-user installation procedure.
+                </td>
+              </tr>
+              <tr>
+                <td>Owner identity is missing</td>
+                <td>
+                  Have the administrator inspect the workspace/identity mapping. Do not create
+                  duplicate owners or loosen RLS.
+                </td>
+              </tr>
+              <tr>
+                <td>Session is invalid or expired</td>
+                <td>
+                  Sign out, refresh, and sign in again. Check the configured project if it persists.
+                </td>
+              </tr>
+              <tr>
+                <td>Complete two-factor verification</td>
+                <td>
+                  Enter a current authenticator code for the enrolled account. Recovery must respect
+                  MFA.
+                </td>
+              </tr>
+              <tr>
+                <td>Request origin is not allowed</td>
+                <td>
+                  <code>ACCORD_ORIGIN</code> must exactly match the URL you use, including scheme
+                  and any port, with no path or trailing slash.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Required runtime configuration is <code>NEXT_PUBLIC_SUPABASE_URL</code>,
+          <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>,
+          <code>ACCORD_ORIGIN</code>, and <code>ACCORD_DEMO=false</code>. Keep the service-role key
+          server-only. Changes to public build variables require a new build/deployment. See
+          <a href="install.html">installation</a>.
+        </p>
+        <h2 id="password-recovery-does-not-arrive-or-opens-the-wrong-site">
+          Password recovery does not arrive or opens the wrong site
+        </h2>
+        <p>
+          Check the spam folder, the email entered, Supabase SMTP, Site URL, and the allowed
+          <code>/reset-password</code> redirect for the exact deployment. The UI deliberately does
+          not confirm whether an account exists. Local Supabase configuration does not configure
+          hosted Auth. Never post a live recovery link in a public issue.
+        </p>
+        <h2 id="the-agent-sees-no-tasks-or-cannot-update-a-record">
+          The agent sees no tasks or cannot update a record
+        </h2>
+        <p>
+          Check that the identity is assigned to the task/routine, the token lists that exact
+          record, and the token has <code>read</code> and each necessary mutation scope. Assigning a
+          record after token issuance does not add it to that token. The owner must issue a
+          replacement credential and revoke the obsolete one. Project membership does not grant
+          sibling access.
+        </p>
+        <p>
+          A People-only credential can legitimately have no tasks. A task-only credential cannot
+          read contact notes or birthdays. <code>people.read</code> does not grant linked task
+          access. Ordinary agent credentials cannot receive human-only authority or
+          <code>evidence.verify</code>.
+        </p>
+        <h2 id="a-command-says-to-reload">A command says to reload</h2>
+        <p>
+          Someone changed the record after the form or agent read it. Refresh, inspect the latest
+          values, and reapply only the change still intended. Agents should use the new version and
+          a new key for revised input. A timeout retry of unchanged input must keep its original key
+          and payload. See <a href="agent-guide.html#retry-protocol">agent retry protocol</a>.
+        </p>
+        <h2 id="task-cannot-be-marked-done">Task cannot be marked done</h2>
+        <p>Inspect these conditions before retrying:</p>
+        <ol>
+          <li>Resolve the blocker and record what changed.</li>
+          <li>Reconcile running or uncertain executions using accepted evidence.</li>
+          <li>Resolve conflicting external references.</li>
+          <li>
+            Fulfill or human-waive every required commitment. Declined/cancelled is not enough.
+          </li>
+          <li>
+            For verified completion, cover each criterion with accepted evidence or have the human
+            explicitly confirm completion.
+          </li>
+          <li>For simple completion by an agent, confirm it owns the task and remains assigned.</li>
+        </ol>
+        <p>
+          Only the human can reopen a terminal task or change its completion requirements. Returning
+          review with feedback is different from editing acceptance criteria.
+        </p>
+        <h2 id="approval-exists-but-execution-is-rejected">
+          Approval exists but execution is rejected
+        </h2>
+        <p>
+          Inspect the current proposal revision, grantee, target, operation, expiry, revocation,
+          usage count, currency, and cost limit. A grant for another identity cannot be borrowed. A
+          superseded revision cannot execute. Running/uncertain work can prevent another attempt. An
+          approval records permission; it does not execute external work. Never “fix” a denial by
+          pretending a different actor performed it.
+        </p>
+        <h2 id="people-reminders-look-unexpected">People reminders look unexpected</h2>
+        <p>
+          Check Settings&#39; workspace timezone, contact status, group cadence, person override,
+          meaningful/non-voided interaction history, and any active snooze. Profile edits and
+          commitment updates do not count as contact. New-contact timing starts at creation until a
+          qualifying interaction exists.
+        </p>
+        <p>
+          Advance and day-of occasions are separate. Acknowledging advance does not suppress the
+          birthday itself. February 29 becomes February 28 in non-leap years. Archived contacts stop
+          relationship reminders, but their unresolved commitments remain visible. Today combines
+          linked commitments into the task item, so inspect that task&#39;s reasons.
+        </p>
+        <p>
+          If an item disappeared after <strong>Dismiss</strong>, check its underlying record: a task
+          is Dismissed, an optional commitment is Cancelled, a required commitment is Waived, a
+          contact cadence is Paused, or an important date is disabled. These changes persist after
+          refresh. Reopen the work or re-enable cadence/date reminders to restore it;
+          <strong>Bring back now</strong> applies to snoozes. Closing a task also excludes its
+          linked commitment reminders from Today without closing those commitments in People.
+        </p>
+        <h2 id="contact-import-partially-succeeded">Contact import partially succeeded</h2>
+        <p>
+          Keep the preview open while reviewing results. Successful rows remain identifiable and
+          safe to retry with their original keys. Refresh and review stale rows; do not replay
+          changed fields under a successful row&#39;s key. Resolve duplicates/conflicts explicitly.
+          Names alone are suggestions, not permission to merge. Unsupported properties and photos
+          are not imported. Check UTF-8 encoding, the 2 MiB limit, and the 1,000-contact limit.
+        </p>
+        <h2 id="evidence-upload-or-download-fails">Evidence upload or download fails</h2>
+        <p>
+          Uploads require appropriate record access, the current parent version, an idempotency key,
+          and a file of at most 3 MiB. Let the client create the multipart boundary. Upload through
+          the authenticated endpoint rather than passing a storage path to a command. A download URL
+          expires after 60 seconds; request a new one. Check private Storage and migration
+          configuration if failures persist. A failed or interrupted upload can leave an
+          unregistered private object; administrators should follow the recovery procedure.
+        </p>
+        <h2 id="a-failed-attempt-is-missing-from-logs">A failed attempt is missing from Logs</h2>
+        <p>
+          Select Everyone or the correct actor, check outcome/date/search filters, and return to
+          Newest activity. Dates use the workspace timezone. Saved changes, reported execution
+          failures, rejected requests, and service failures are different outcomes.
+        </p>
+        <p>
+          Unknown credentials cannot be attributed, successful reads are not captured, and actions
+          outside Accord are not observable. A log-storage outage can prevent capture. The original
+          request error remains primary; REST may include <code>X-Accord-Log-Status</code> and MCP
+          <code>_meta[&quot;accord/logStatus&quot;]</code>. Administrators can inspect sanitized
+          server diagnostics. Logical archives do not include failed-attempt diagnostics. See
+          <a href="logs.html">Logs</a>.
+        </p>
+        <h2 id="workspace-unavailable-after-deployment">Workspace unavailable after deployment</h2>
+        <p>
+          Check that the deployment uses the intended Supabase project, all repository migrations
+          are applied in order, the owner is installed, the service key is valid, and the app is not
+          in preview mode. Do not reset a populated database to solve a missing migration. Use
+          <code>supabase db push --dry-run</code> to inspect pending migrations against the
+          explicitly selected project. Hosted deployment, Auth, RLS, Storage, and recovery need
+          their own checks.
+        </p>
+        <h2 id="request-help-with-useful-evidence">Request help with useful evidence</h2>
+        <p>
+          Provide the app version/commit if known, deployment origin, screen, safe record ID,
+          command name, error code, approximate time/timezone, and whether it happened once or on an
+          unchanged retry. For MCP include whether connection, tool discovery, or tool invocation
+          failed. Include sanitized Logs details. Preserve private records and secrets outside
+          public tickets. Read <a href="recovery.html">recovery</a> before any restore or rollback.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/troubleshooting.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

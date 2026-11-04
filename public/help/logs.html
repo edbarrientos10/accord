@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Inspecting agent activity · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#changes-and-unsuccessful-attempts">Changes and unsuccessful attempts</a
+            ><a href="#performance-and-access">Performance and access</a
+            ><a href="#migration-and-recovery">Migration and recovery</a
+            ><a href="#local-validation">Local validation</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#changes-and-unsuccessful-attempts">Changes and unsuccessful attempts</a
+            ><a href="#performance-and-access">Performance and access</a
+            ><a href="#migration-and-recovery">Migration and recovery</a
+            ><a href="#local-validation">Local validation</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/logs.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="inspecting-agent-activity">Inspecting agent activity</h1>
+        <p>
+          Open <strong>Logs</strong> in the sidebar, or choose <strong>View activity</strong> on an
+          agent&#39;s card. The default is agents and integrations; Everyone includes the human
+          owner. Filter by actor, command, outcome, calendar date, related record, or search words.
+          Dates use the workspace timezone. Filters, selected events, and page cursors remain in the
+          URL.
+        </p>
+        <h2 id="changes-and-unsuccessful-attempts">Changes and unsuccessful attempts</h2>
+        <p>
+          Saved changes come from Accord&#39;s append-only audit trail. A command can change several
+          records, each with before/after values. Idempotent successful retries reuse the original
+          result and do not duplicate these changes.
+        </p>
+        <p>Unsuccessful requests are separate append-only events. Coverage includes:</p>
+        <ul>
+          <li>
+            REST domain commands, including malformed JSON, oversized bodies, invalid retry keys,
+            validation failures, denied scope/assignment, stale versions, lifecycle rejection, and
+            persistence failures.
+          </li>
+          <li>
+            MCP tool invocations, including SDK validation and tools unavailable to the credential,
+            before a command handler runs.
+          </li>
+          <li>
+            Failed REST state/attention reads and MCP query/attention calls. Successful read-only
+            calls are not logged.
+          </li>
+          <li>
+            Expired or revoked agent credentials when their stored token hash identifies the agent.
+            This attribution never grants access. MCP authentication rejection occurs before tool
+            parsing, so its command is shown as unknown.command.
+          </li>
+        </ul>
+        <p>
+          Each rejected retry gets its own event ID. An actor-scoped hashed retry reference connects
+          attempts by the same identity that used the same key. Logs show error category/code,
+          interface, duration, optional target ID, and safe validation field names. Request bodies,
+          raw retry keys, tokens, headers, raw provider errors, and stack traces are not stored.
+          Unknown credentials cannot be attributed to a workspace and are not recorded. External
+          runtime activity remains outside Accord&#39;s visibility.
+        </p>
+        <p>
+          Reported execution failure and a rejected Accord request are different outcomes. A service
+          failure does not prove rollback: the response may have been lost after a successful
+          commit. Inspect current state and retry with the same idempotency key. A reported
+          execution success is still not independent verification.
+        </p>
+        <p>
+          Failure logging is independent of the domain transaction and never changes workspace
+          revision, permission, or lifecycle. Its database write has a 1.5-second timeout. If
+          persistence is unavailable, the original request error is preserved, a sanitized
+          operational fallback is emitted to the server log, and command REST responses expose
+          X-Accord-Log-Status or MCP results expose accord/logStatus in _meta. A database outage can
+          prevent an attempt from appearing in the UI; logs are not an infallible external telemetry
+          service. Diagnostic read failures do not recursively create log events.
+        </p>
+        <h2 id="performance-and-access">Performance and access</h2>
+        <p>
+          The production UI requests <code>/api/v1/state?history=none</code>. Authentication,
+          attention, credential validation, and command execution use a current snapshot that never
+          queries audit history. Command commits append only new audit events; they do not resend or
+          iterate over the old history.
+        </p>
+        <p>
+          An insert trigger indexes compact audit summaries in activity_log. Failed attempts use the
+          same feed. Indexes cover workspace/time/ID order, agent-only history, individual actors,
+          commands, outcomes, record context and full-text search. Queries use keyset cursors, never
+          deep OFFSET or total-count scans. The UI holds one page of 50 summaries; the API caps
+          pages at 100. Full changes are fetched only for the selected event. Task/person/routine
+          history also loads a bounded page, with a link to the full paginated inspector.
+        </p>
+        <p>
+          While visible, the newest page refreshes every 15 seconds. Older pages stay stable until
+          you return to Newest activity. Filter edits are debounced; obsolete requests are
+          cancelled. Refresh preserves the shell and selection. Errors retain the last loaded page.
+          Large details are rendered in scrollable field panels.
+        </p>
+        <p>
+          Diagnostics are owner-only: GET /api/v1/logs and GET /api/v1/logs/{id} require the
+          authenticated workspace owner. Agents receive their normal command errors; existing scopes
+          do not gain diagnostic or cross-task access. Owner-read RLS and workspace predicates also
+          protect the underlying feed. Existing scoped audit reads and explicit full exports retain
+          their authorization rules.
+        </p>
+        <p>
+          For compatibility, GET /api/v1/state without history=none and accord_query with
+          includeHistory=true still return historical audit data. Prefer includeHistory=false for
+          ordinary agent state queries. Full exports intentionally read full history.
+        </p>
+        <h2 id="migration-and-recovery">Migration and recovery</h2>
+        <ol>
+          <li>Back up the installed database and test changes in an isolated local copy.</li>
+          <li>
+            Apply existing migrations in order, then
+            <code>supabase/migrations/202610260003_activity_logs.sql</code>, after the People
+            migration. Do not reset an existing workspace.
+          </li>
+          <li>
+            This adds the compact snapshot function and activity feed, backfills summaries for
+            existing audit events, and installs the append-only indexing trigger. Backfill work
+            scales with existing history; allow a maintenance window for a large database. No
+            historical audit or record IDs are replaced.
+          </li>
+          <li>
+            Start the matching application build. Verify a stale-version rejection, denied agent
+            command, successful command retry, paginated history, and owner isolation before
+            considering a hosted rollout.
+          </li>
+        </ol>
+        <p>
+          Failed attempts begin with this version; old failures cannot be reconstructed. The feed
+          has no automatic destructive retention. Database backups include it. accord.v1/v2/v3
+          logical archives preserve domain audit history but exclude operational failed-attempt
+          diagnostics; restoring their audit events rebuilds saved-change summaries through the
+          trigger. Preserve a database backup when request diagnostics must also be retained.
+        </p>
+        <h2 id="local-validation">Local validation</h2>
+        <p>
+          The populated migration check inserts 20,000 audit events, verifies the compact snapshot
+          stays exactly the same size, checks bounded summary pages and cursor stability under new
+          inserts, and confirms an indexed ordered query plan. It also checks owner RLS, denied
+          client mutation, legacy audit preservation, append-only behavior, and atomic command
+          deltas. REST/MCP tests cover pre-handler rejection, service errors, safe metadata, retry
+          attribution, and log-storage failure. Browser checks cover 50-row pages, detail-on-demand,
+          failed-attempt inspection, automatic refresh without state reloads, filters, accessibility
+          and mobile use. These are local results, not hosted throughput or deployment acceptance.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/logs.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

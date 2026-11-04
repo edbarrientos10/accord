@@ -1,0 +1,3851 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Accord REST API",
+    "version": "0.1.0",
+    "description": "Tasks use the compatible workstream contract. Bearer authentication and runtime authorization apply. Public docs never grant authority."
+  },
+  "servers": [{ "url": "/" }],
+  "components": { "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } } },
+  "paths": {
+    "/api/v1/commands/person.import": {
+      "post": {
+        "operationId": "person.import",
+        "summary": "Import one reviewed profile and optional birthday atomically. Existing profile/birthday updates require reviewed versions. Empty imported fields never erase values; no automatic duplicate merge.",
+        "description": "Version target: person and optional birthday for updates; none for new records. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "profile": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                      "organization": { "type": "string", "maxLength": 10000 },
+                      "role": { "type": "string", "maxLength": 10000 },
+                      "groupId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      "tags": {
+                        "maxItems": 50,
+                        "type": "array",
+                        "items": { "type": "string", "minLength": 1, "maxLength": 100 }
+                      },
+                      "notes": { "type": "string", "maxLength": 10000 },
+                      "emails": {
+                        "maxItems": 30,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "label": { "type": "string", "maxLength": 100 },
+                            "value": {
+                              "type": "string",
+                              "format": "email",
+                              "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                            }
+                          },
+                          "required": ["label", "value"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "phones": {
+                        "maxItems": 30,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "label": { "type": "string", "maxLength": 100 },
+                            "value": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                          },
+                          "required": ["label", "value"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "links": {
+                        "maxItems": 30,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "label": { "type": "string", "maxLength": 100 },
+                            "value": { "type": "string", "format": "uri" }
+                          },
+                          "required": ["label", "value"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "cadenceMode": { "type": "string", "enum": ["inherit", "custom", "paused"] },
+                      "cadenceDays": {
+                        "anyOf": [
+                          { "type": "integer", "minimum": 1, "maximum": 3650 },
+                          { "type": "null" }
+                        ]
+                      },
+                      "status": { "type": "string", "enum": ["active", "archived"] },
+                      "externalIds": {
+                        "maxItems": 30,
+                        "type": "array",
+                        "items": { "type": "string", "maxLength": 500 }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "birthday": {
+                    "type": "object",
+                    "properties": {
+                      "month": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "day": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "year": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      "expectedVersion": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": ["month", "day", "year"],
+                    "additionalProperties": false
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["profile", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/person.create": {
+      "post": {
+        "operationId": "person.create",
+        "summary": "Create a contact and third-party identity atomically. Name and reason required; group defaults to Other. No account or message is created.",
+        "description": "Version target: none. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "organization": { "default": "", "type": "string", "maxLength": 10000 },
+                  "role": { "default": "", "type": "string", "maxLength": 10000 },
+                  "groupId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "tags": {
+                    "default": [],
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 100 }
+                  },
+                  "notes": { "default": "", "type": "string", "maxLength": 10000 },
+                  "emails": {
+                    "default": [],
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": { "type": "string", "maxLength": 100 },
+                        "value": {
+                          "type": "string",
+                          "format": "email",
+                          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                        }
+                      },
+                      "required": ["label", "value"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "phones": {
+                    "default": [],
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": { "type": "string", "maxLength": 100 },
+                        "value": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["label", "value"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "links": {
+                    "default": [],
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": { "type": "string", "maxLength": 100 },
+                        "value": { "type": "string", "format": "uri" }
+                      },
+                      "required": ["label", "value"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "cadenceMode": {
+                    "default": "inherit",
+                    "type": "string",
+                    "enum": ["inherit", "custom", "paused"]
+                  },
+                  "cadenceDays": {
+                    "default": null,
+                    "anyOf": [
+                      { "type": "integer", "minimum": 1, "maximum": 3650 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "status": {
+                    "default": "active",
+                    "type": "string",
+                    "enum": ["active", "archived"]
+                  },
+                  "externalIds": {
+                    "default": [],
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 500 }
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["name", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/person.update": {
+      "post": {
+        "operationId": "person.update",
+        "summary": "Edit or archive a contact profile. Profile changes do not count as meaningful contact; unresolved commitments remain visible.",
+        "description": "Version target: person. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "organization": { "type": "string", "maxLength": 10000 },
+                  "role": { "type": "string", "maxLength": 10000 },
+                  "groupId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "tags": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 100 }
+                  },
+                  "notes": { "type": "string", "maxLength": 10000 },
+                  "emails": {
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": { "type": "string", "maxLength": 100 },
+                        "value": {
+                          "type": "string",
+                          "format": "email",
+                          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                        }
+                      },
+                      "required": ["label", "value"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "phones": {
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": { "type": "string", "maxLength": 100 },
+                        "value": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["label", "value"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "links": {
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": { "type": "string", "maxLength": 100 },
+                        "value": { "type": "string", "format": "uri" }
+                      },
+                      "required": ["label", "value"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "cadenceMode": { "type": "string", "enum": ["inherit", "custom", "paused"] },
+                  "cadenceDays": {
+                    "anyOf": [
+                      { "type": "integer", "minimum": 1, "maximum": 3650 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "status": { "type": "string", "enum": ["active", "archived"] },
+                  "externalIds": {
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 500 }
+                  },
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/relationship_group.create": {
+      "post": {
+        "operationId": "relationship_group.create",
+        "summary": "Create a relationship group with cadence days or null for off.",
+        "description": "Version target: none. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "cadenceDays": {
+                    "anyOf": [
+                      { "type": "integer", "minimum": 1, "maximum": 3650 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["name", "cadenceDays", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/relationship_group.update": {
+      "post": {
+        "operationId": "relationship_group.update",
+        "summary": "Change group name or cadence inherited by contacts.",
+        "description": "Version target: relationship group. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "cadenceDays": {
+                    "anyOf": [
+                      { "type": "integer", "minimum": 1, "maximum": 3650 },
+                      { "type": "null" }
+                    ]
+                  }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/interaction.log": {
+      "post": {
+        "operationId": "interaction.log",
+        "summary": "Record an observed interaction, channel, date, summary, and meaningful flag. Does not send a message. Only meaningful non-voided interactions reset cadence.",
+        "description": "Version target: none. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "personId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "occurredAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": ["meeting", "call", "message", "email", "other"]
+                  },
+                  "summary": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "meaningful": { "type": "boolean" },
+                  "source": { "default": "", "type": "string", "maxLength": 10000 },
+                  "voided": { "default": false, "type": "boolean" },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": [
+                  "personId",
+                  "occurredAt",
+                  "channel",
+                  "summary",
+                  "meaningful",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/interaction.correct": {
+      "post": {
+        "operationId": "interaction.correct",
+        "summary": "Correct or void an interaction while preserving audit history.",
+        "description": "Version target: interaction. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "personId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "occurredAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": ["meeting", "call", "message", "email", "other"]
+                  },
+                  "summary": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "meaningful": { "type": "boolean" },
+                  "source": { "type": "string", "maxLength": 10000 },
+                  "voided": { "type": "boolean" },
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/important_date.create": {
+      "post": {
+        "operationId": "important_date.create",
+        "summary": "Add birthday, anniversary, or named date. Annual dates may omit year; birthdays must be annual and one-time dates require year.",
+        "description": "Version target: none. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "personId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "kind": { "type": "string", "enum": ["birthday", "anniversary", "other"] },
+                  "month": { "type": "integer", "minimum": 1, "maximum": 12 },
+                  "day": { "type": "integer", "minimum": 1, "maximum": 31 },
+                  "year": {
+                    "default": null,
+                    "anyOf": [
+                      { "type": "integer", "minimum": 1, "maximum": 9999 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "annual": { "default": true, "type": "boolean" },
+                  "advance": { "default": false, "type": "boolean" },
+                  "active": { "default": true, "type": "boolean" },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["personId", "title", "kind", "month", "day", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/important_date.update": {
+      "post": {
+        "operationId": "important_date.update",
+        "summary": "Edit or disable an important date. Changes can invalidate occurrence reminders.",
+        "description": "Version target: important date. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "personId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "kind": { "type": "string", "enum": ["birthday", "anniversary", "other"] },
+                  "month": { "type": "integer", "minimum": 1, "maximum": 12 },
+                  "day": { "type": "integer", "minimum": 1, "maximum": 31 },
+                  "year": {
+                    "anyOf": [
+                      { "type": "integer", "minimum": 1, "maximum": 9999 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "annual": { "type": "boolean" },
+                  "advance": { "type": "boolean" },
+                  "active": { "type": "boolean" },
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/commitment.create": {
+      "post": {
+        "operationId": "commitment.create",
+        "summary": "Record waiting_on or i_owe work with a human/agent coordinator, initially requested. Task links are informational unless human-required; linking needs task access.",
+        "description": "Version target: none. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "personId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "direction": { "type": "string", "enum": ["waiting_on", "i_owe"] },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "coordinatorId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "promisedDate": {
+                    "default": null,
+                    "anyOf": [
+                      { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                      { "type": "null" }
+                    ]
+                  },
+                  "followUpAt": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "priority": {
+                    "default": "none",
+                    "type": "string",
+                    "enum": ["none", "low", "medium", "high", "urgent"]
+                  },
+                  "source": { "default": "", "type": "string", "maxLength": 10000 },
+                  "workstreamId": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "projectId": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "required": { "default": false, "type": "boolean" },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["personId", "direction", "title", "coordinatorId", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/commitment.update": {
+      "post": {
+        "operationId": "commitment.update",
+        "summary": "Edit commitment details, dates, or links. Only the human can change required status or move required work to another task. Linking needs task access.",
+        "description": "Version target: commitment. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "personId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "direction": { "type": "string", "enum": ["waiting_on", "i_owe"] },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "coordinatorId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "promisedDate": {
+                    "anyOf": [
+                      { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                      { "type": "null" }
+                    ]
+                  },
+                  "followUpAt": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["none", "low", "medium", "high", "urgent"]
+                  },
+                  "source": { "type": "string", "maxLength": 10000 },
+                  "workstreamId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "projectId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "required": { "type": "boolean" },
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/commitment.transition": {
+      "post": {
+        "operationId": "commitment.transition",
+        "summary": "Record a commitment state with a note. Fulfillment requires committed/reported_done; terminal states reopen as requested/committed. Only the human may waive. Never auto-completes a task.",
+        "description": "Version target: commitment. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "requested",
+                      "committed",
+                      "reported_done",
+                      "fulfilled",
+                      "declined",
+                      "cancelled",
+                      "waived"
+                    ]
+                  },
+                  "note": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "status", "note"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/people_reminder.respond": {
+      "post": {
+        "operationId": "people_reminder.respond",
+        "summary": "Snooze a current People reminder or acknowledge an occasion. Use the attention projection occurrenceKey and subject version. Contact/commitment acknowledgment is not allowed.",
+        "description": "Version target: attention item subject version. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "occurrenceKey": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "response": { "type": "string", "enum": ["acknowledged", "snoozed"] },
+                  "until": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      { "type": "null" }
+                    ]
+                  }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "occurrenceKey", "response"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workspace.timezone": {
+      "post": {
+        "operationId": "workspace.timezone",
+        "summary": "Set the IANA workspace timezone. Human only.",
+        "description": "Version target: workspace.revision. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "timezone": { "type": "string" },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["expectedVersion", "timezone", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/profile.update": {
+      "post": {
+        "operationId": "profile.update",
+        "summary": "Update your display name and optional role/title. Human owner only; empty role clears it.",
+        "description": "Version target: workspace.revision. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                  "role": { "type": "string", "maxLength": 100 },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["name", "role", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/project.create": {
+      "post": {
+        "operationId": "project.create",
+        "summary": "Create a project with optional description and target date. Does not grant task access.",
+        "description": "Version target: none. Requires workspace agent access and the exact command scope, or the human owner. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "description": { "default": "", "type": "string", "maxLength": 10000 },
+                  "targetDate": {
+                    "default": null,
+                    "anyOf": [
+                      { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                      { "type": "null" }
+                    ]
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["name", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/project.update": {
+      "post": {
+        "operationId": "project.update",
+        "summary": "Edit, archive, or reactivate a project without completing its tasks.",
+        "description": "Version target: project. Requires workspace agent access and the exact command scope, or the human owner. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "description": { "type": "string", "maxLength": 10000 },
+                  "targetDate": {
+                    "anyOf": [
+                      { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                      { "type": "null" }
+                    ]
+                  },
+                  "status": { "type": "string", "enum": ["active", "archived"] }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/decision.respond": {
+      "post": {
+        "operationId": "decision.respond",
+        "summary": "Decline a proposal or request changes with feedback. Human only; creates no authority. Proposal retries require a new revision; returning a completion review reopens active work.",
+        "description": "Version target: action or task under review. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "response": { "type": "string", "enum": ["declined", "changes_requested"] },
+                  "feedback": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "response", "feedback"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/reminder.snooze": {
+      "post": {
+        "operationId": "reminder.snooze",
+        "summary": "Postpone a task, action, or routine reminder for its current version. Human only; changes neither status nor authority.",
+        "description": "Version target: subject task, action, or routine. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "until": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "until"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/reminder.clear": {
+      "post": {
+        "operationId": "reminder.clear",
+        "summary": "Bring a snoozed task/action/routine reminder back. Human only.",
+        "description": "Version target: reminder record. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.create": {
+      "post": {
+        "operationId": "workstream.create",
+        "summary": "Create a task with optional links (id, title, HTTP/HTTPS url, optional note). Human or explicitly scoped workspace agent; defaults to verified completion. The UI explicitly selects simple completion.",
+        "description": "Version target: none. Requires workspace agent access and the exact command scope, or the human owner. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "projectId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["none", "low", "medium", "high", "urgent"]
+                  },
+                  "dueDate": {
+                    "anyOf": [
+                      { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                      { "type": "null" }
+                    ]
+                  },
+                  "planningStage": { "type": "string", "enum": ["todo", "in_progress"] },
+                  "completionPolicy": { "type": "string", "enum": ["simple", "verified"] },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "outcome": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "ownerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "assignedAgentIds": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    }
+                  },
+                  "mode": {
+                    "default": "assisted",
+                    "type": "string",
+                    "enum": ["human_led", "assisted", "approval_required", "autonomous"]
+                  },
+                  "criteria": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                        },
+                        "text": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["id", "text"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "nextAction": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "text": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                          "ownerId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                          },
+                          "dependency": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                          "requiredAuthority": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 10000
+                          }
+                        },
+                        "required": ["text", "ownerId"],
+                        "additionalProperties": false
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "reviewAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "references": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                        },
+                        "system": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "objectId": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "url": { "type": "string", "format": "uri" },
+                        "responsibility": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "reportedStatus": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "checkedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "conflict": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["id", "system", "objectId", "responsibility"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "links": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                        },
+                        "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "url": { "type": "string", "format": "uri" },
+                        "note": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["id", "title", "url"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["title", "outcome", "ownerId", "criteria", "nextAction", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.update": {
+      "post": {
+        "operationId": "workstream.update",
+        "summary": "Update task planning, progress, next action, or links. Links replaces the full list: preserve existing entries when adding; omit to keep, [] to clear. Authorized agents can add, edit, and remove links. Workspace agents with workstream.manage may change owner, assignments, or project. Only the human can change outcome, mode, policy, criteria, or clear external conflicts. Preserve existing references.",
+        "description": "Version target: task. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "projectId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["none", "low", "medium", "high", "urgent"]
+                  },
+                  "dueDate": {
+                    "anyOf": [
+                      { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                      { "type": "null" }
+                    ]
+                  },
+                  "planningStage": { "type": "string", "enum": ["todo", "in_progress"] },
+                  "completionPolicy": { "type": "string", "enum": ["simple", "verified"] },
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "outcome": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "ownerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "assignedAgentIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    }
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": ["human_led", "assisted", "approval_required", "autonomous"]
+                  },
+                  "nextAction": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "text": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                          "ownerId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                          },
+                          "dependency": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                          "requiredAuthority": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 10000
+                          }
+                        },
+                        "required": ["text", "ownerId"],
+                        "additionalProperties": false
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "reviewAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "reportedProgress": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "references": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                        },
+                        "system": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "objectId": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "url": { "type": "string", "format": "uri" },
+                        "responsibility": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "reportedStatus": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "checkedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "conflict": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["id", "system", "objectId", "responsibility"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "links": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                        },
+                        "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                        "url": { "type": "string", "format": "uri" },
+                        "note": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["id", "title", "url"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "criteria": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                        },
+                        "text": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                      },
+                      "required": ["id", "text"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.block": {
+      "post": {
+        "operationId": "workstream.block",
+        "summary": "Record a blocker with cause, attempted resolution, unblock condition, and resolver.",
+        "description": "Version target: task. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "cause": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "attemptedResolution": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "unblockCondition": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "resolverId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  }
+                },
+                "required": [
+                  "entityId",
+                  "expectedVersion",
+                  "reason",
+                  "cause",
+                  "attemptedResolution",
+                  "unblockCondition",
+                  "resolverId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.unblock": {
+      "post": {
+        "operationId": "workstream.unblock",
+        "summary": "Resolve a blocker with an attributable reason after its condition is satisfied.",
+        "description": "Version target: task. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.review": {
+      "post": {
+        "operationId": "workstream.review",
+        "summary": "Submit an unblocked task for completion review.",
+        "description": "Version target: task. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.close": {
+      "post": {
+        "operationId": "workstream.close",
+        "summary": "Complete a task through its policy. Simple requires the human, assigned agent owner, or scoped workspace agent; verified requires trusted criterion evidence or explicit human confirmation. Unresolved blockers, executions, conflicts, and required commitments prevent closure.",
+        "description": "Version target: task. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "evidenceIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    }
+                  },
+                  "humanConfirmation": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "evidenceIds"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.terminate": {
+      "post": {
+        "operationId": "workstream.terminate",
+        "summary": "Cancel or dismiss a task with a reason. Human or scoped workspace agent; preserves the distinct disposition.",
+        "description": "Version target: task. Requires workspace agent access and the exact command scope, or the human owner. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "disposition": { "type": "string", "enum": ["cancelled", "dismissed"] }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "disposition"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/workstream.reopen": {
+      "post": {
+        "operationId": "workstream.reopen",
+        "summary": "Reopen a completed, cancelled, or dismissed task. Human or scoped workspace agent.",
+        "description": "Version target: task. Requires workspace agent access and the exact command scope, or the human owner. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/action.propose": {
+      "post": {
+        "operationId": "action.propose",
+        "summary": "Create an immutable exact-content proposal for a task. Use supersedesId for a revision; previous approval does not transfer.",
+        "description": "Version target: parent task. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "workstreamId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "operation": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "effect": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "target": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "content": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "scope": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "declaredCost": { "default": 0, "type": "number", "minimum": 0 },
+                  "currency": {
+                    "default": "USD",
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "supersedesId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": [
+                  "workstreamId",
+                  "expectedVersion",
+                  "operation",
+                  "effect",
+                  "target",
+                  "content",
+                  "scope",
+                  "expiresAt",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/action.request_approval": {
+      "post": {
+        "operationId": "action.request_approval",
+        "summary": "Request human approval of the current unexpired proposal revision.",
+        "description": "Version target: action. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/grant.approve": {
+      "post": {
+        "operationId": "grant.approve",
+        "summary": "Approve one exact proposal revision for a grantee. Human only; does not execute it.",
+        "description": "Version target: action. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "granteeId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "granteeId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/grant.standing": {
+      "post": {
+        "operationId": "grant.standing",
+        "summary": "Grant bounded recurring permission for exactly one task or routine, with operation, target, time, use, and declared-cost limits. Human only.",
+        "description": "Version target: parent task or routine. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "workstreamId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "operationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "granteeId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "operations": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                  },
+                  "targets": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                  },
+                  "validFrom": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "maxUses": { "type": "integer", "exclusiveMinimum": 0, "maximum": 1000000 },
+                  "costLimit": { "type": "number", "minimum": 0 },
+                  "currency": {
+                    "default": "USD",
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": [
+                  "expectedVersion",
+                  "granteeId",
+                  "operations",
+                  "targets",
+                  "validFrom",
+                  "expiresAt",
+                  "maxUses",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/grant.revoke": {
+      "post": {
+        "operationId": "grant.revoke",
+        "summary": "Revoke a grant. Human only; does not undo external effects.",
+        "description": "Version target: grant. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/execution.start": {
+      "post": {
+        "operationId": "execution.start",
+        "summary": "Reserve applicable authority before external work. Choose exactly one action or routine. Requires the actor as grantee and no conflicting running/uncertain attempt. Does not run external tools.",
+        "description": "Version target: action or routine. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "actionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "operationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "grantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "operation": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "target": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "declaredCost": { "default": 0, "type": "number", "minimum": 0 },
+                  "currency": {
+                    "default": "USD",
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["expectedVersion", "grantId", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/execution.report": {
+      "post": {
+        "operationId": "execution.report",
+        "summary": "Record succeeded, partial, failed, or uncertain observation for a running execution. Executor or human only; report is not independent verification.",
+        "description": "Version target: execution. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "state": {
+                    "type": "string",
+                    "enum": ["succeeded", "partial", "failed", "uncertain"]
+                  },
+                  "result": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "externalId": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "incidentKey": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "state", "result"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/execution.reconcile": {
+      "post": {
+        "operationId": "execution.reconcile",
+        "summary": "Resolve a running/uncertain execution with accepted evidence tied to that attempt. Do not repeat external work to resolve ambiguity.",
+        "description": "Version target: execution. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "state": { "type": "string", "enum": ["succeeded", "partial", "failed"] },
+                  "result": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "externalId": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "evidenceIds": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    }
+                  }
+                },
+                "required": [
+                  "entityId",
+                  "expectedVersion",
+                  "reason",
+                  "state",
+                  "result",
+                  "evidenceIds"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/evidence.attach": {
+      "post": {
+        "operationId": "evidence.attach",
+        "summary": "Attach unverified evidence with provenance to exactly one task or routine. Use authenticated file upload for bytes, never raw storagePath claims.",
+        "description": "Version target: parent task or routine. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "workstreamId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "operationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "executionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "criterionIds": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    }
+                  },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "description": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "provenance": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "url": { "type": "string", "format": "uri" },
+                  "storagePath": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["expectedVersion", "title", "description", "provenance", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/evidence.verify": {
+      "post": {
+        "operationId": "evidence.verify",
+        "summary": "Accept evidence as the human or independently verify as a scoped integration. Ordinary agents cannot verify; integrations cannot verify their own execution.",
+        "description": "Version target: evidence. Requires exact command scope and applicable record access. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "note": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason", "note"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/evidence.invalidate": {
+      "post": {
+        "operationId": "evidence.invalidate",
+        "summary": "Invalidate previously trusted evidence with a reason. Human only.",
+        "description": "Version target: evidence. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/operation.create": {
+      "post": {
+        "operationId": "operation.create",
+        "summary": "Create a routine observed by Accord and scheduled externally. Human or scoped workspace agent.",
+        "description": "Version target: none. Requires workspace agent access and the exact command scope, or the human owner. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "purpose": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "ownerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "assignedAgentIds": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    }
+                  },
+                  "cadenceHours": { "type": "number", "exclusiveMinimum": 0, "maximum": 87600 },
+                  "expectedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["title", "purpose", "ownerId", "cadenceHours", "expectedAt", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/operation.update": {
+      "post": {
+        "operationId": "operation.update",
+        "summary": "Update routine purpose, cadence, expected time, or assignments. Human or scoped workspace agent; does not change an external scheduler.",
+        "description": "Version target: routine. Requires workspace agent access and the exact command scope, or the human owner. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "purpose": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "cadenceHours": { "type": "number", "exclusiveMinimum": 0, "maximum": 87600 },
+                  "expectedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "assignedAgentIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+                    }
+                  }
+                },
+                "required": ["entityId", "expectedVersion", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/commands/identity.create": {
+      "post": {
+        "operationId": "identity.create",
+        "summary": "Create an agent, integration, or third-party identity. Human only; does not launch a runtime or issue a token.",
+        "description": "Version target: none. Human only. Does not execute external tools. Runtime refinements and field-level authorization also apply.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[\\w.-]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 10000 },
+                  "kind": { "type": "string", "enum": ["agent", "integration", "third_party"] },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 10000 }
+                },
+                "required": ["name", "kind", "reason"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result committed or equivalent retry replayed" },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Invalid or revoked credential" },
+          "403": { "description": "Scope, assignment or human-authority restriction" },
+          "409": {
+            "description": "Version conflict, exhausted authority, uncertain execution or insufficient evidence"
+          },
+          "503": {
+            "description": "Persistence unavailable; preserve the intent key and inspect current state before retrying"
+          }
+        }
+      }
+    },
+    "/api/v1/state": {
+      "get": {
+        "summary": "Read authorized workspace state",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Returns {state, actor}; demo returns {state, demo:true}. Use history=none for compact reads. Default retains full authorized audit history. Read requires read or people.read for agents; credential accessMode and People privacy apply.",
+        "parameters": [
+          {
+            "name": "history",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["none"] },
+            "description": "Omit for legacy full-history behavior."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized state and actor (or fictional demo)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["state"],
+                  "properties": {
+                    "state": { "type": "object" },
+                    "actor": { "type": "object" },
+                    "demo": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing retry key",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": {
+            "description": "Invalid, missing, expired, or revoked credential",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "403": {
+            "description": "Caller or origin not permitted",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "409": {
+            "description": "Conflict; reload and reconcile",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "Service unavailable; inspect state and preserve retry intent",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/credentials": {
+      "get": {
+        "summary": "List owner-only credential metadata without token hashes",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Credential metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["credentials"],
+                  "properties": {
+                    "credentials": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing retry key",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": {
+            "description": "Invalid, missing, expired, or revoked credential",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "403": {
+            "description": "Caller or origin not permitted",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "409": {
+            "description": "Conflict; reload and reconcile",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "Service unavailable; inspect state and preserve retry intent",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      },
+      "post": {
+        "summary": "Issue an owner-only scoped credential; token returned once",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w.-]{8,128}$",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "description": "Integrations allow read/evidence.verify; agents allow read, people.read and worker scopes. People mutations require people.read. Task capabilities require assignments unless accessMode is workspace. Workspace access is agent-only, requires empty assignments, and covers current and future work records. Workspace management capabilities require workspace access. workstream.manage additionally permits organizational fields with workstream.update; it is not a command. Default accessMode is assigned. Expiry defaults to 90 days and must be future within 366 days. Equivalent retries do not return the token again.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["identityId", "scopes", "assignments"],
+                "properties": {
+                  "identityId": { "type": "string", "format": "uuid" },
+                  "scopes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+                  "assignments": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" }
+                  },
+                  "accessMode": {
+                    "type": "string",
+                    "enum": ["assigned", "workspace"],
+                    "default": "assigned"
+                  },
+                  "expiresAt": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issuance result; token exists only on initial creation",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": {
+            "description": "Invalid input or missing retry key",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": {
+            "description": "Invalid, missing, expired, or revoked credential",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "403": {
+            "description": "Caller or origin not permitted",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "409": {
+            "description": "Conflict; reload and reconcile",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "Service unavailable; inspect state and preserve retry intent",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/credentials/{id}": {
+      "delete": {
+        "summary": "Revoke credential as human owner",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w.-]{8,128}$",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Current credential version as a decimal string, without quotes.",
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revocation result",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": {
+            "description": "Invalid input or missing retry key",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": {
+            "description": "Invalid, missing, expired, or revoked credential",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "403": {
+            "description": "Caller or origin not permitted",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "409": {
+            "description": "Conflict; reload and reconcile",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "Service unavailable; inspect state and preserve retry intent",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/evidence/upload": {
+      "post": {
+        "summary": "Upload private file evidence, maximum 3 MiB",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w.-]{8,128}$",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "description": "Requires evidence.attach and access to the parent. Metadata is a JSON-encoded evidence.attach input without storagePath/sha256; server supplies them. File must be nonempty. Let the client set the multipart boundary.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "metadata"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "metadata": {
+                    "type": "string",
+                    "description": "JSON-encoded evidence.attach input with exactly one parent and its current version."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Attached evidence in {result}",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": {
+            "description": "Invalid input or missing retry key",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": {
+            "description": "Invalid, missing, expired, or revoked credential",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "403": {
+            "description": "Caller or origin not permitted",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "409": {
+            "description": "Conflict; reload and reconcile",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "Service unavailable; inspect state and preserve retry intent",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/evidence/{id}/download": {
+      "get": {
+        "summary": "Get a private file URL for authorized evidence",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Do not log or persist the signed URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["url", "expiresIn"],
+                  "properties": {
+                    "url": { "type": "string", "format": "uri" },
+                    "expiresIn": { "type": "integer", "const": 60 }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing retry key",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": {
+            "description": "Invalid, missing, expired, or revoked credential",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "403": {
+            "description": "Caller or origin not permitted",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "404": {
+            "description": "File evidence unavailable",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "409": {
+            "description": "Conflict; reload and reconcile",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "Service unavailable; inspect state and preserve retry intent",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/export": {
+      "post": {
+        "summary": "Export owner-selected projects, tasks, or routines",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Private accord.v3 archive with related evidence and domain audit. Excludes credentials and failed-attempt diagnostics. Project selection includes its tasks; task selection contains only minimal linked People context.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["ids"],
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Private logical archive; see recovery guide",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": {
+            "description": "Invalid input or missing retry key",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": {
+            "description": "Invalid, missing, expired, or revoked credential",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "403": {
+            "description": "Caller or origin not permitted",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "409": {
+            "description": "Conflict; reload and reconcile",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "Service unavailable; inspect state and preserve retry intent",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/logs": {
+      "get": {
+        "summary": "Read owner-only activity summaries with keyset pagination",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "actor", "in": "query", "schema": { "type": "string" } },
+          { "name": "command", "in": "query", "schema": { "type": "string" } },
+          { "name": "outcome", "in": "query", "schema": { "type": "string" } },
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "from", "in": "query", "schema": { "type": "string" } },
+          { "name": "to", "in": "query", "schema": { "type": "string" } },
+          { "name": "entity", "in": "query", "schema": { "type": "string" } },
+          { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Bounded items and nextCursor; details excluded" },
+          "403": { "description": "Workspace owner required" }
+        }
+      }
+    },
+    "/api/v1/logs/{id}": {
+      "get": {
+        "summary": "Read one owner-authorized audit or failed-attempt detail",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Summary and event or attempt" },
+          "403": { "description": "Workspace owner required" },
+          "404": { "description": "Event unavailable" }
+        }
+      }
+    },
+    "/api/v1/attention": {
+      "get": {
+        "summary": "Read authorized Today and People reminders",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Current authorized queue" } }
+      }
+    }
+  }
+}

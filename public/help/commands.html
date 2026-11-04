@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Command reference · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#personimport">person.import</a><a href="#personcreate">person.create</a
+            ><a href="#personupdate">person.update</a
+            ><a href="#relationshipgroupcreate">relationship_group.create</a
+            ><a href="#relationshipgroupupdate">relationship_group.update</a
+            ><a href="#interactionlog">interaction.log</a
+            ><a href="#interactioncorrect">interaction.correct</a
+            ><a href="#importantdatecreate">important_date.create</a
+            ><a href="#importantdateupdate">important_date.update</a
+            ><a href="#commitmentcreate">commitment.create</a
+            ><a href="#commitmentupdate">commitment.update</a
+            ><a href="#commitmenttransition">commitment.transition</a
+            ><a href="#peoplereminderrespond">people_reminder.respond</a
+            ><a href="#workspacetimezone">workspace.timezone</a
+            ><a href="#profileupdate">profile.update</a><a href="#projectcreate">project.create</a
+            ><a href="#projectupdate">project.update</a
+            ><a href="#decisionrespond">decision.respond</a
+            ><a href="#remindersnooze">reminder.snooze</a><a href="#reminderclear">reminder.clear</a
+            ><a href="#workstreamcreate">workstream.create</a
+            ><a href="#workstreamupdate">workstream.update</a
+            ><a href="#workstreamblock">workstream.block</a
+            ><a href="#workstreamunblock">workstream.unblock</a
+            ><a href="#workstreamreview">workstream.review</a
+            ><a href="#workstreamclose">workstream.close</a
+            ><a href="#workstreamterminate">workstream.terminate</a
+            ><a href="#workstreamreopen">workstream.reopen</a
+            ><a href="#actionpropose">action.propose</a
+            ><a href="#actionrequestapproval">action.request_approval</a
+            ><a href="#grantapprove">grant.approve</a><a href="#grantstanding">grant.standing</a
+            ><a href="#grantrevoke">grant.revoke</a><a href="#executionstart">execution.start</a
+            ><a href="#executionreport">execution.report</a
+            ><a href="#executionreconcile">execution.reconcile</a
+            ><a href="#evidenceattach">evidence.attach</a
+            ><a href="#evidenceverify">evidence.verify</a
+            ><a href="#evidenceinvalidate">evidence.invalidate</a
+            ><a href="#operationcreate">operation.create</a
+            ><a href="#operationupdate">operation.update</a
+            ><a href="#identitycreate">identity.create</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#personimport">person.import</a><a href="#personcreate">person.create</a
+            ><a href="#personupdate">person.update</a
+            ><a href="#relationshipgroupcreate">relationship_group.create</a
+            ><a href="#relationshipgroupupdate">relationship_group.update</a
+            ><a href="#interactionlog">interaction.log</a
+            ><a href="#interactioncorrect">interaction.correct</a
+            ><a href="#importantdatecreate">important_date.create</a
+            ><a href="#importantdateupdate">important_date.update</a
+            ><a href="#commitmentcreate">commitment.create</a
+            ><a href="#commitmentupdate">commitment.update</a
+            ><a href="#commitmenttransition">commitment.transition</a
+            ><a href="#peoplereminderrespond">people_reminder.respond</a
+            ><a href="#workspacetimezone">workspace.timezone</a
+            ><a href="#profileupdate">profile.update</a><a href="#projectcreate">project.create</a
+            ><a href="#projectupdate">project.update</a
+            ><a href="#decisionrespond">decision.respond</a
+            ><a href="#remindersnooze">reminder.snooze</a><a href="#reminderclear">reminder.clear</a
+            ><a href="#workstreamcreate">workstream.create</a
+            ><a href="#workstreamupdate">workstream.update</a
+            ><a href="#workstreamblock">workstream.block</a
+            ><a href="#workstreamunblock">workstream.unblock</a
+            ><a href="#workstreamreview">workstream.review</a
+            ><a href="#workstreamclose">workstream.close</a
+            ><a href="#workstreamterminate">workstream.terminate</a
+            ><a href="#workstreamreopen">workstream.reopen</a
+            ><a href="#actionpropose">action.propose</a
+            ><a href="#actionrequestapproval">action.request_approval</a
+            ><a href="#grantapprove">grant.approve</a><a href="#grantstanding">grant.standing</a
+            ><a href="#grantrevoke">grant.revoke</a><a href="#executionstart">execution.start</a
+            ><a href="#executionreport">execution.report</a
+            ><a href="#executionreconcile">execution.reconcile</a
+            ><a href="#evidenceattach">evidence.attach</a
+            ><a href="#evidenceverify">evidence.verify</a
+            ><a href="#evidenceinvalidate">evidence.invalidate</a
+            ><a href="#operationcreate">operation.create</a
+            ><a href="#operationupdate">operation.update</a
+            ><a href="#identitycreate">identity.create</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/commands.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / AGENTS</p>
+        <h1 id="command-reference">Command reference</h1>
+        <p>
+          Generated from shared command metadata and validators. Do not edit this file directly.
+        </p>
+        <p>
+          All mutations require a reason and an idempotency key. Field-level authorization,
+          assignment, lifecycle, and semantic refinements still apply. “Human, agent” means an
+          explicitly scoped agent, not any caller. People mutations also require
+          <code>people.read</code>. Read <a href="agent-guide.html">the agent guide</a> before
+          invoking a command and use <a href="/docs/openapi.json">OpenAPI</a> for exact required
+          fields, types, defaults, and limits.
+        </p>
+        <h2 id="personimport">person.import</h2>
+        <p>
+          Import one reviewed profile and optional birthday atomically. Existing profile/birthday
+          updates require reviewed versions. Empty imported fields never erase values; no automatic
+          duplicate merge.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>person.import</code>. Also requires
+            <code>people.read</code>.
+          </li>
+          <li>Version target: person and optional birthday for updates; none for new records.</li>
+          <li>REST: <code>POST /api/v1/commands/person.import</code>.</li>
+          <li>MCP: <code>accord_person_import</code>.</li>
+        </ul>
+        <h2 id="personcreate">person.create</h2>
+        <p>
+          Create a contact and third-party identity atomically. Name and reason required; group
+          defaults to Other. No account or message is created.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>person.create</code>. Also requires
+            <code>people.read</code>.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/person.create</code>.</li>
+          <li>MCP: <code>accord_person_create</code>.</li>
+        </ul>
+        <h2 id="personupdate">person.update</h2>
+        <p>
+          Edit or archive a contact profile. Profile changes do not count as meaningful contact;
+          unresolved commitments remain visible.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>person.update</code>. Also requires
+            <code>people.read</code>.
+          </li>
+          <li>Version target: person.</li>
+          <li>REST: <code>POST /api/v1/commands/person.update</code>.</li>
+          <li>MCP: <code>accord_person_update</code>.</li>
+        </ul>
+        <h2 id="relationshipgroupcreate">relationship_group.create</h2>
+        <p>Create a relationship group with cadence days or null for off.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>relationship_group.create</code>.
+            Also requires <code>people.read</code>.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/relationship_group.create</code>.</li>
+          <li>MCP: <code>accord_relationship_group_create</code>.</li>
+        </ul>
+        <h2 id="relationshipgroupupdate">relationship_group.update</h2>
+        <p>Change group name or cadence inherited by contacts.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>relationship_group.update</code>.
+            Also requires <code>people.read</code>.
+          </li>
+          <li>Version target: relationship group.</li>
+          <li>REST: <code>POST /api/v1/commands/relationship_group.update</code>.</li>
+          <li>MCP: <code>accord_relationship_group_update</code>.</li>
+        </ul>
+        <h2 id="interactionlog">interaction.log</h2>
+        <p>
+          Record an observed interaction, channel, date, summary, and meaningful flag. Does not send
+          a message. Only meaningful non-voided interactions reset cadence.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>interaction.log</code>. Also
+            requires <code>people.read</code>.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/interaction.log</code>.</li>
+          <li>MCP: <code>accord_interaction_log</code>.</li>
+        </ul>
+        <h2 id="interactioncorrect">interaction.correct</h2>
+        <p>Correct or void an interaction while preserving audit history.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>interaction.correct</code>. Also
+            requires <code>people.read</code>.
+          </li>
+          <li>Version target: interaction.</li>
+          <li>REST: <code>POST /api/v1/commands/interaction.correct</code>.</li>
+          <li>MCP: <code>accord_interaction_correct</code>.</li>
+        </ul>
+        <h2 id="importantdatecreate">important_date.create</h2>
+        <p>
+          Add birthday, anniversary, or named date. Annual dates may omit year; birthdays must be
+          annual and one-time dates require year.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>important_date.create</code>. Also
+            requires <code>people.read</code>.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/important_date.create</code>.</li>
+          <li>MCP: <code>accord_important_date_create</code>.</li>
+        </ul>
+        <h2 id="importantdateupdate">important_date.update</h2>
+        <p>Edit or disable an important date. Changes can invalidate occurrence reminders.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>important_date.update</code>. Also
+            requires <code>people.read</code>.
+          </li>
+          <li>Version target: important date.</li>
+          <li>REST: <code>POST /api/v1/commands/important_date.update</code>.</li>
+          <li>MCP: <code>accord_important_date_update</code>.</li>
+        </ul>
+        <h2 id="commitmentcreate">commitment.create</h2>
+        <p>
+          Record waiting_on or i_owe work with a human/agent coordinator, initially requested. Task
+          links are informational unless human-required; linking needs task access.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>commitment.create</code>. Also
+            requires <code>people.read</code>.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/commitment.create</code>.</li>
+          <li>MCP: <code>accord_commitment_create</code>.</li>
+        </ul>
+        <h2 id="commitmentupdate">commitment.update</h2>
+        <p>
+          Edit commitment details, dates, or links. Only the human can change required status or
+          move required work to another task. Linking needs task access.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>commitment.update</code>. Also
+            requires <code>people.read</code>.
+          </li>
+          <li>Version target: commitment.</li>
+          <li>REST: <code>POST /api/v1/commands/commitment.update</code>.</li>
+          <li>MCP: <code>accord_commitment_update</code>.</li>
+        </ul>
+        <h2 id="commitmenttransition">commitment.transition</h2>
+        <p>
+          Record a commitment state with a note. Fulfillment requires committed/reported_done;
+          terminal states reopen as requested/committed. Only the human may waive. Never
+          auto-completes a task.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>commitment.transition</code>. Also
+            requires <code>people.read</code>.
+          </li>
+          <li>Version target: commitment.</li>
+          <li>REST: <code>POST /api/v1/commands/commitment.transition</code>.</li>
+          <li>MCP: <code>accord_commitment_transition</code>.</li>
+        </ul>
+        <h2 id="peoplereminderrespond">people_reminder.respond</h2>
+        <p>
+          Snooze a current People reminder or acknowledge an occasion. Use the attention projection
+          occurrenceKey and subject version. Contact/commitment acknowledgment is not allowed.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>people_reminder.respond</code>.
+            Also requires <code>people.read</code>.
+          </li>
+          <li>Version target: attention item subject version.</li>
+          <li>REST: <code>POST /api/v1/commands/people_reminder.respond</code>.</li>
+          <li>MCP: <code>accord_people_reminder_respond</code>.</li>
+        </ul>
+        <h2 id="workspacetimezone">workspace.timezone</h2>
+        <p>Set the IANA workspace timezone. Human only.</p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: workspace.revision.</li>
+          <li>REST: <code>POST /api/v1/commands/workspace.timezone</code>.</li>
+          <li>MCP: <code>accord_workspace_timezone</code>.</li>
+        </ul>
+        <h2 id="profileupdate">profile.update</h2>
+        <p>
+          Update your display name and optional role/title. Human owner only; empty role clears it.
+        </p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: workspace.revision.</li>
+          <li>REST: <code>POST /api/v1/commands/profile.update</code>.</li>
+          <li>MCP: <code>accord_profile_update</code>.</li>
+        </ul>
+        <h2 id="projectcreate">project.create</h2>
+        <p>
+          Create a project with optional description and target date. Does not grant task access.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>project.create</code>. Requires
+            workspace access for agents.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/project.create</code>.</li>
+          <li>MCP: <code>accord_project_create</code>.</li>
+        </ul>
+        <h2 id="projectupdate">project.update</h2>
+        <p>Edit, archive, or reactivate a project without completing its tasks.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>project.update</code>. Requires
+            workspace access for agents.
+          </li>
+          <li>Version target: project.</li>
+          <li>REST: <code>POST /api/v1/commands/project.update</code>.</li>
+          <li>MCP: <code>accord_project_update</code>.</li>
+        </ul>
+        <h2 id="decisionrespond">decision.respond</h2>
+        <p>
+          Decline a proposal or request changes with feedback. Human only; creates no authority.
+          Proposal retries require a new revision; returning a completion review reopens active
+          work.
+        </p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: action or task under review.</li>
+          <li>REST: <code>POST /api/v1/commands/decision.respond</code>.</li>
+          <li>MCP: <code>accord_decision_respond</code>.</li>
+        </ul>
+        <h2 id="remindersnooze">reminder.snooze</h2>
+        <p>
+          Postpone a task, action, or routine reminder for its current version. Human only; changes
+          neither status nor authority.
+        </p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: subject task, action, or routine.</li>
+          <li>REST: <code>POST /api/v1/commands/reminder.snooze</code>.</li>
+          <li>MCP: <code>accord_reminder_snooze</code>.</li>
+        </ul>
+        <h2 id="reminderclear">reminder.clear</h2>
+        <p>Bring a snoozed task/action/routine reminder back. Human only.</p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: reminder record.</li>
+          <li>REST: <code>POST /api/v1/commands/reminder.clear</code>.</li>
+          <li>MCP: <code>accord_reminder_clear</code>.</li>
+        </ul>
+        <h2 id="workstreamcreate">workstream.create</h2>
+        <p>
+          Create a task with optional links (id, title, HTTP/HTTPS url, optional note). Human or
+          explicitly scoped workspace agent; defaults to verified completion. The UI explicitly
+          selects simple completion.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>workstream.create</code>. Requires
+            workspace access for agents.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.create</code>.</li>
+          <li>MCP: <code>accord_workstream_create</code>.</li>
+        </ul>
+        <h2 id="workstreamupdate">workstream.update</h2>
+        <p>
+          Update task planning, progress, next action, or links. Links replaces the full list:
+          preserve existing entries when adding; omit to keep, [] to clear. Authorized agents can
+          add, edit, and remove links. Workspace agents with workstream.manage may change owner,
+          assignments, or project. Only the human can change outcome, mode, policy, criteria, or
+          clear external conflicts. Preserve existing references.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>workstream.update</code>.</li>
+          <li>Version target: task.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.update</code>.</li>
+          <li>MCP: <code>accord_workstream_update</code>.</li>
+        </ul>
+        <h2 id="workstreamblock">workstream.block</h2>
+        <p>Record a blocker with cause, attempted resolution, unblock condition, and resolver.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>workstream.block</code>.</li>
+          <li>Version target: task.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.block</code>.</li>
+          <li>MCP: <code>accord_workstream_block</code>.</li>
+        </ul>
+        <h2 id="workstreamunblock">workstream.unblock</h2>
+        <p>Resolve a blocker with an attributable reason after its condition is satisfied.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>workstream.unblock</code>.</li>
+          <li>Version target: task.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.unblock</code>.</li>
+          <li>MCP: <code>accord_workstream_unblock</code>.</li>
+        </ul>
+        <h2 id="workstreamreview">workstream.review</h2>
+        <p>Submit an unblocked task for completion review.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>workstream.review</code>.</li>
+          <li>Version target: task.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.review</code>.</li>
+          <li>MCP: <code>accord_workstream_review</code>.</li>
+        </ul>
+        <h2 id="workstreamclose">workstream.close</h2>
+        <p>
+          Complete a task through its policy. Simple requires the human, assigned agent owner, or
+          scoped workspace agent; verified requires trusted criterion evidence or explicit human
+          confirmation. Unresolved blockers, executions, conflicts, and required commitments prevent
+          closure.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>workstream.close</code>.</li>
+          <li>Version target: task.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.close</code>.</li>
+          <li>MCP: <code>accord_workstream_close</code>.</li>
+        </ul>
+        <h2 id="workstreamterminate">workstream.terminate</h2>
+        <p>
+          Cancel or dismiss a task with a reason. Human or scoped workspace agent; preserves the
+          distinct disposition.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>workstream.terminate</code>.
+            Requires workspace access for agents.
+          </li>
+          <li>Version target: task.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.terminate</code>.</li>
+          <li>MCP: <code>accord_workstream_terminate</code>.</li>
+        </ul>
+        <h2 id="workstreamreopen">workstream.reopen</h2>
+        <p>Reopen a completed, cancelled, or dismissed task. Human or scoped workspace agent.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>workstream.reopen</code>. Requires
+            workspace access for agents.
+          </li>
+          <li>Version target: task.</li>
+          <li>REST: <code>POST /api/v1/commands/workstream.reopen</code>.</li>
+          <li>MCP: <code>accord_workstream_reopen</code>.</li>
+        </ul>
+        <h2 id="actionpropose">action.propose</h2>
+        <p>
+          Create an immutable exact-content proposal for a task. Use supersedesId for a revision;
+          previous approval does not transfer.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>action.propose</code>.</li>
+          <li>Version target: parent task.</li>
+          <li>REST: <code>POST /api/v1/commands/action.propose</code>.</li>
+          <li>MCP: <code>accord_action_propose</code>.</li>
+        </ul>
+        <h2 id="actionrequestapproval">action.request_approval</h2>
+        <p>Request human approval of the current unexpired proposal revision.</p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>action.request_approval</code>.
+          </li>
+          <li>Version target: action.</li>
+          <li>REST: <code>POST /api/v1/commands/action.request_approval</code>.</li>
+          <li>MCP: <code>accord_action_request_approval</code>.</li>
+        </ul>
+        <h2 id="grantapprove">grant.approve</h2>
+        <p>Approve one exact proposal revision for a grantee. Human only; does not execute it.</p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: action.</li>
+          <li>REST: <code>POST /api/v1/commands/grant.approve</code>.</li>
+          <li>MCP: <code>accord_grant_approve</code>.</li>
+        </ul>
+        <h2 id="grantstanding">grant.standing</h2>
+        <p>
+          Grant bounded recurring permission for exactly one task or routine, with operation,
+          target, time, use, and declared-cost limits. Human only.
+        </p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: parent task or routine.</li>
+          <li>REST: <code>POST /api/v1/commands/grant.standing</code>.</li>
+          <li>MCP: <code>accord_grant_standing</code>.</li>
+        </ul>
+        <h2 id="grantrevoke">grant.revoke</h2>
+        <p>Revoke a grant. Human only; does not undo external effects.</p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: grant.</li>
+          <li>REST: <code>POST /api/v1/commands/grant.revoke</code>.</li>
+          <li>MCP: <code>accord_grant_revoke</code>.</li>
+        </ul>
+        <h2 id="executionstart">execution.start</h2>
+        <p>
+          Reserve applicable authority before external work. Choose exactly one action or routine.
+          Requires the actor as grantee and no conflicting running/uncertain attempt. Does not run
+          external tools.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>execution.start</code>.</li>
+          <li>Version target: action or routine.</li>
+          <li>REST: <code>POST /api/v1/commands/execution.start</code>.</li>
+          <li>MCP: <code>accord_execution_start</code>.</li>
+        </ul>
+        <h2 id="executionreport">execution.report</h2>
+        <p>
+          Record succeeded, partial, failed, or uncertain observation for a running execution.
+          Executor or human only; report is not independent verification.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>execution.report</code>.</li>
+          <li>Version target: execution.</li>
+          <li>REST: <code>POST /api/v1/commands/execution.report</code>.</li>
+          <li>MCP: <code>accord_execution_report</code>.</li>
+        </ul>
+        <h2 id="executionreconcile">execution.reconcile</h2>
+        <p>
+          Resolve a running/uncertain execution with accepted evidence tied to that attempt. Do not
+          repeat external work to resolve ambiguity.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>execution.reconcile</code>.</li>
+          <li>Version target: execution.</li>
+          <li>REST: <code>POST /api/v1/commands/execution.reconcile</code>.</li>
+          <li>MCP: <code>accord_execution_reconcile</code>.</li>
+        </ul>
+        <h2 id="evidenceattach">evidence.attach</h2>
+        <p>
+          Attach unverified evidence with provenance to exactly one task or routine. Use
+          authenticated file upload for bytes, never raw storagePath claims.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>Required mutation scope for non-human callers: <code>evidence.attach</code>.</li>
+          <li>Version target: parent task or routine.</li>
+          <li>REST: <code>POST /api/v1/commands/evidence.attach</code>.</li>
+          <li>MCP: <code>accord_evidence_attach</code>.</li>
+        </ul>
+        <h2 id="evidenceverify">evidence.verify</h2>
+        <p>
+          Accept evidence as the human or independently verify as a scoped integration. Ordinary
+          agents cannot verify; integrations cannot verify their own execution.
+        </p>
+        <ul>
+          <li>Callers: human, integration.</li>
+          <li>Required mutation scope for non-human callers: <code>evidence.verify</code>.</li>
+          <li>Version target: evidence.</li>
+          <li>REST: <code>POST /api/v1/commands/evidence.verify</code>.</li>
+          <li>MCP: <code>accord_evidence_verify</code>.</li>
+        </ul>
+        <h2 id="evidenceinvalidate">evidence.invalidate</h2>
+        <p>Invalidate previously trusted evidence with a reason. Human only.</p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: evidence.</li>
+          <li>REST: <code>POST /api/v1/commands/evidence.invalidate</code>.</li>
+          <li>MCP: <code>accord_evidence_invalidate</code>.</li>
+        </ul>
+        <h2 id="operationcreate">operation.create</h2>
+        <p>
+          Create a routine observed by Accord and scheduled externally. Human or scoped workspace
+          agent.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>operation.create</code>. Requires
+            workspace access for agents.
+          </li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/operation.create</code>.</li>
+          <li>MCP: <code>accord_operation_create</code>.</li>
+        </ul>
+        <h2 id="operationupdate">operation.update</h2>
+        <p>
+          Update routine purpose, cadence, expected time, or assignments. Human or scoped workspace
+          agent; does not change an external scheduler.
+        </p>
+        <ul>
+          <li>Callers: human, agent.</li>
+          <li>
+            Required mutation scope for non-human callers: <code>operation.update</code>. Requires
+            workspace access for agents.
+          </li>
+          <li>Version target: routine.</li>
+          <li>REST: <code>POST /api/v1/commands/operation.update</code>.</li>
+          <li>MCP: <code>accord_operation_update</code>.</li>
+        </ul>
+        <h2 id="identitycreate">identity.create</h2>
+        <p>
+          Create an agent, integration, or third-party identity. Human only; does not launch a
+          runtime or issue a token.
+        </p>
+        <ul>
+          <li>Callers: human.</li>
+          <li>Required mutation scope for non-human callers: not available.</li>
+          <li>Version target: none.</li>
+          <li>REST: <code>POST /api/v1/commands/identity.create</code>.</li>
+          <li>MCP: <code>accord_identity_create</code>.</li>
+        </ul>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/commands.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

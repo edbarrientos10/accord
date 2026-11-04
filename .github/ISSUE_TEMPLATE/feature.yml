@@ -1,0 +1,10 @@
+name: Feature request
+description: Describe a concrete user need and proposed behavior.
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Include expected behavior and relevant details. Never include credentials, private records, or security exploit details.
+    validations:
+      required: true

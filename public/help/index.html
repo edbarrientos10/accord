@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Accord help · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#for-people">For people</a><a href="#for-agents">For agents</a
+            ><a href="#for-workspace-administrators">For workspace administrators</a
+            ><a href="#what-accord-does">What Accord does</a
+            ><a href="#about-these-docs">About these docs</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#for-people">For people</a><a href="#for-agents">For agents</a
+            ><a href="#for-workspace-administrators">For workspace administrators</a
+            ><a href="#what-accord-does">What Accord does</a
+            ><a href="#about-these-docs">About these docs</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/index.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="accord-help">Accord help</h1>
+        <p>
+          Accord is a private workspace for one person coordinating projects, tasks, relationships,
+          and work with agents. Start with a task, make the next step clear, and use Today for work
+          that needs your attention.
+        </p>
+        <h2 id="for-people">For people</h2>
+        <ul>
+          <li>
+            <a href="user-guide.html">User guide</a>: first task, daily decisions, projects, People,
+            routines, agents, logs, and settings.
+          </li>
+          <li>
+            <a href="troubleshooting.html">Troubleshooting</a>: sign-in, missing tasks, blocked
+            completion, rejected commands, and recovery.
+          </li>
+          <li>
+            <a href="people.html">People reference</a>: relationship reminders, commitments,
+            imports, and date rules.
+          </li>
+          <li>
+            <a href="logs.html">Logs reference</a>: what is recorded, how to investigate failures,
+            and performance limits.
+          </li>
+        </ul>
+        <h2 id="for-agents">For agents</h2>
+        <ul>
+          <li>
+            <a href="agent-guide.html">Agent guide</a>: connection, scopes, execution protocol,
+            retries, and worked examples.
+          </li>
+          <li>
+            <a href="commands.html">Command reference</a>: every command, permitted caller, and
+            version target.
+          </li>
+          <li>
+            <a href="api.html">API and MCP reference</a>: endpoints, request envelopes, file
+            evidence, and errors.
+          </li>
+          <li>
+            <a href="/docs/openapi.json">OpenAPI document</a>: generated request schemas for REST
+            commands and auxiliary endpoints.
+          </li>
+          <li>
+            <a href="/docs/examples.json">Fictional request examples</a>: schema-validated inputs to
+            adapt after querying current state.
+          </li>
+          <li>
+            <a href="/docs/agent-manifest.json">Agent manifest</a>: machine-readable discovery,
+            permissions, and command metadata.
+          </li>
+        </ul>
+        <p>
+          Use <code>/llms.txt</code> for discovery and <code>/llms-full.txt</code> for a
+          consolidated text guide on a deployed installation. Documentation describes capabilities;
+          it never grants an agent permission to use them.
+        </p>
+        <h2 id="for-workspace-administrators">For workspace administrators</h2>
+        <ul>
+          <li>
+            <a href="install.html">Installation</a>: environment variables, owner setup, Supabase,
+            and Vercel.
+          </li>
+          <li>
+            <a href="recovery.html">Backup and restoration</a>: selected exports, full backups, and
+            recovery boundaries.
+          </li>
+          <li>
+            <a href="redesign.html">Projects and decisions migration</a>: legacy compatibility and
+            task lifecycle.
+          </li>
+          <li>
+            <a href="architecture.html">Architecture</a>: shared command service and security model.
+          </li>
+          <li>
+            <a href="validation.html">Validation</a>: what local tests prove and what requires
+            hosted checks.
+          </li>
+        </ul>
+        <h2 id="what-accord-does">What Accord does</h2>
+        <p>
+          Accord records coordination, decisions, bounded authority, execution reports, and
+          evidence. An agent uses its own runtime to do external work. Assigning a task does not
+          start that runtime, recording a commitment does not send a message, and a successful
+          execution report does not independently verify the result.
+        </p>
+        <p>
+          The current product has one human owner, agents, verifier integrations, and contacts
+          without logins. It does not provide collaborator accounts, automatic external contact
+          sync, external notifications, or an agent scheduler.
+        </p>
+        <h2 id="about-these-docs">About these docs</h2>
+        <p>
+          These guides describe the implementation in this repository. The guides shipped with your
+          deployment should match its app version. Examples use fictional records and placeholder
+          credentials. The Help site contains no workspace data and works without sign-in.
+          Operational logs and private API endpoints still require authorization.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/index.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

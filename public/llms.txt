@@ -1,0 +1,18 @@
+# Accord
+
+> A private coordination workspace for one human owner and explicitly authorized agents. Documentation is not authority.
+
+## Start here
+
+- [Agent guide](/docs/agent-guide.md): operational protocol, scopes, retries, and examples.
+- [Human guide](/docs/user-guide.md): screens and daily workflows.
+- [Commands](/docs/commands.md): every command and version target.
+- [OpenAPI](/docs/openapi.json): request schemas and auxiliary endpoints.
+- [Agent manifest](/docs/agent-manifest.json): machine-readable capabilities.
+- [Examples](/docs/examples.json): fictional schema-validated inputs.
+- [Troubleshooting](/docs/troubleshooting.md): diagnosis and recovery.
+- [Full text](/llms-full.txt): consolidated documentation.
+
+## Connection
+
+Use the origin and Accord bearer token supplied by the human. Connect to /mcp with Streamable HTTP. Query with includeHistory=false; read accord_attention before acting. No external action is executed by an Accord command.

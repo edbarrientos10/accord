@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>API and MCP · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#rest">REST</a><a href="#mcp">MCP</a
+            ><a href="#minimal-agent-workflow">Minimal agent workflow</a
+            ><a href="#projects-tasks-and-decisions">Projects, tasks, and decisions</a
+            ><a href="#schema-validation">Schema validation</a
+            ><a href="#people-and-attention">People and attention</a
+            ><a href="#activity-and-failed-attempts">Activity and failed attempts</a
+            ><a href="#workspace-agent-access">Workspace agent access</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#rest">REST</a><a href="#mcp">MCP</a
+            ><a href="#minimal-agent-workflow">Minimal agent workflow</a
+            ><a href="#projects-tasks-and-decisions">Projects, tasks, and decisions</a
+            ><a href="#schema-validation">Schema validation</a
+            ><a href="#people-and-attention">People and attention</a
+            ><a href="#activity-and-failed-attempts">Activity and failed attempts</a
+            ><a href="#workspace-agent-access">Workspace agent access</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/api.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="api-and-mcp">API and MCP</h1>
+        <p>
+          Start with the <a href="agent-guide.html">agent operating guide</a> for a full workflow
+          and <a href="commands.html">command reference</a> for roles and version targets. Public
+          machine-readable metadata is at <code>/docs/agent-manifest.json</code>; schema discovery
+          is at <code>/llms.txt</code>.
+        </p>
+        <p>
+          Every endpoint requires an owner Supabase access token or an opaque Accord agent token,
+          except a read-only fictional preview. Bearer credentials belong in the Authorization
+          header. Browser origins must match <code>ACCORD_ORIGIN</code>.
+        </p>
+        <h2 id="rest">REST</h2>
+        <ul>
+          <li>
+            <code>GET /api/v1/state</code>: current workstreams, operations, related records and
+            audit history filtered to the caller&#39;s scopes and record access mode.
+          </li>
+          <li>
+            <code>POST /api/v1/commands/COMMAND</code>: JSON command input, with
+            <code>Idempotency-Key</code>. Returns <code>{ &quot;result&quot;: RECORD }</code>.
+            Existing records require <code>expectedVersion</code>; parent-based creation uses its
+            parent&#39;s current version.
+          </li>
+          <li>
+            <code>GET /api/v1/credentials</code>: owner-only credential metadata, excluding hashes.
+          </li>
+          <li>
+            <code>POST /api/v1/credentials</code>: owner-only issuance with <code>identityId</code>,
+            explicit <code>scopes</code>, <code>assignments</code>, optional
+            <code>accessMode</code> (<code>assigned</code> by default or agent-only
+            <code>workspace</code>), optional <code>expiresAt</code>, and
+            <code>Idempotency-Key</code>. The token is returned once. Equivalent retries return
+            metadata, never the original token; revoke and replace it if the first response was
+            lost.
+          </li>
+          <li>
+            <code>DELETE /api/v1/credentials/ID</code>: owner-only revocation with current version
+            in <code>If-Match</code> and <code>Idempotency-Key</code>.
+          </li>
+          <li>
+            <code>POST /api/v1/evidence/upload</code>: authenticated multipart <code>file</code> and
+            JSON <code>metadata</code> containing the <code>evidence.attach</code> fields and parent
+            version, with <code>Idempotency-Key</code>. The server supplies the path and SHA-256. Up
+            to 3 MiB.
+          </li>
+          <li>
+            <code>GET /api/v1/evidence/ID/download</code>: requires read access to the
+            evidence&#39;s parent; returns a private URL valid for 60 seconds. Do not log the URL.
+          </li>
+          <li>
+            <code>POST /api/v1/export</code>: owner-only, explicit
+            <code>{ &quot;ids&quot;: [PROJECT_TASK_OR_ROUTINE_IDS] }</code>. Includes related
+            evidence bytes and history. Operation exports include their linked incidents. Does not
+            include credentials or owner authentication IDs.
+          </li>
+        </ul>
+        <p>
+          See <a href="/docs/openapi.json">generated OpenAPI command schemas</a>. Regenerate with
+          <code>npm run schema</code>. Schema refinements such as exclusive parent selection and
+          state-dependent permissions are additionally enforced by the command service.
+        </p>
+        <p>
+          Errors use
+          <code
+            >{ &quot;error&quot;: { &quot;code&quot;, &quot;message&quot;, &quot;details&quot; }
+            }</code
+          >. A <code>conflict</code> includes the current entity version when available: reload,
+          reconcile, and use a new intent key. <code>idempotency_mismatch</code> means content
+          changed under an existing key. <code>reconciliation_required</code> forbids potentially
+          duplicative execution. An HTTP success records a coordination event, not an external
+          system effect.
+        </p>
+        <h2 id="mcp">MCP</h2>
+        <p>
+          <code>POST /mcp</code> implements stateless Streamable HTTP using the official MCP SDK.
+          Each request authenticates independently; GET streaming and DELETE sessions are not
+          supported. <code>accord_query</code> accepts optional <code>entityId</code> and
+          <code>includeHistory</code> (default true). Prefer <code>includeHistory: false</code> for
+          normal reads. <code>accord_attention</code> accepts <code>{}</code>. Both return JSON in
+          MCP text content blocks. Query returns state; attention returns an item array. REST state
+          wraps <code>{state, actor}</code>, and REST attention wraps <code>{items}</code>.
+        </p>
+        <p>
+          Command tools use <code>accord_</code> plus the command name with dots replaced by
+          underscores, e.g. <code>accord_action_propose</code>. Arguments are:
+        </p>
+        <pre tabindex="0" aria-label="Code example"><code>{
+  &quot;input&quot;: { &quot;workstreamId&quot;: &quot;UUID&quot;, &quot;expectedVersion&quot;: 1 },
+  &quot;idempotencyKey&quot;: &quot;persist-this-key-for-equivalent-retries&quot;
+}</code></pre>
+        <p>
+          The input must contain all fields in that command&#39;s schema. Tool discovery exposes
+          capabilities permitted by the authenticated identity; command checks still enforce
+          human-only decisions, credential record access, capabilities and versions. Domain errors
+          are JSON text content with <code>isError: true</code> and the same error codes as REST.
+          Use the HTTP upload endpoint for file evidence; direct object-path claims are rejected
+          from public commands and MCP.
+        </p>
+        <h2 id="minimal-agent-workflow">Minimal agent workflow</h2>
+        <ol>
+          <li>Query the assigned workstream and note its version and closure criteria.</li>
+          <li>
+            Propose the exact operation, effect, target, content, scope, expiry and any declared
+            cost; request approval on that action revision.
+          </li>
+          <li>
+            The human reviews and approves through Today. Query the resulting grant and current
+            action version; the agent cannot approve itself.
+          </li>
+          <li>
+            Start an execution to reserve authority before performing the external action in the
+            agent&#39;s own runtime. Report the observed result and external identifier.
+          </li>
+          <li>
+            Attach evidence and submit for review. The human accepts the evidence; the assigned
+            agent may then close only if every criterion is satisfied.
+          </li>
+          <li>
+            If a result is ambiguous, report <code>uncertain</code>; attach lookup/reconciliation
+            evidence and wait for its acceptance before reconciling. Do not repeat the sensitive
+            action merely because a transport timed out.
+          </li>
+        </ol>
+        <p>
+          The sample client accepts a tool suffix (<code>query</code>, <code>action_propose</code>,
+          etc.) and JSON input. Set <code>ACCORD_RETRY_KEY</code> to preserve a mutation key across
+          retries. Never use live private inputs in examples, CI logs or public issue reports.
+        </p>
+        <h2 id="projects-tasks-and-decisions">Projects, tasks, and decisions</h2>
+        <p>
+          The web UI calls workstreams <strong>tasks</strong>, but <code>workstream.*</code>,
+          <code>workstreamId</code>, and the <code>workstreams</code> state collection retain their
+          existing names and IDs. The optional planning fields, project commands, human decision
+          responses, and reminders are specified in
+          <a href="redesign.html">the redesign contract</a>. Generated OpenAPI schemas include these
+          additions. Agents read scoped project context and decision feedback through
+          <code>accord_query</code>; project membership grants no access. Legacy creates default to
+          verified completion. Task creation requires the human or a workspace agent with
+          <code>workstream.create</code>. Simple completion must be explicitly requested by the
+          human during creation or policy changes.
+        </p>
+        <h2 id="schema-validation">Schema validation</h2>
+        <p>
+          Runtime validators use patched Zod 4. OpenAPI is generated with native
+          <code>z.toJSONSchema</code> in input mode (JSON Schema 2020-12 for OpenAPI 3.1),
+          preserving optional/defaulted request fields. Existing UUID-like identifiers retain the
+          8-4-4-4-12 hexadecimal contract through <code>z.guid()</code>. All commands still reject
+          unknown fields; custom domain refinements are enforced at runtime even when they cannot be
+          represented in JSON Schema. Validation failures retain HTTP 400 and
+          <code>error.details.formErrors</code> / <code>error.details.fieldErrors</code>.
+        </p>
+        <h2 id="people-and-attention">People and attention</h2>
+        <p>
+          <code>GET /api/v1/attention</code> and MCP <code>accord_attention</code> return the
+          authorized current queue. People command names, scopes, import semantics, and permission
+          boundaries are documented in <a href="people.html">People</a>. All commands also appear in
+          the generated OpenAPI document. New archives are <code>accord.v3</code>; restore also
+          accepts v1/v2.
+        </p>
+        <h2 id="activity-and-failed-attempts">Activity and failed attempts</h2>
+        <p>
+          <code>GET /api/v1/logs</code> is owner-only and returns
+          <code>{ items, nextCursor }</code>. Parameters: <code>actor</code> (agents, all, or an
+          identity ID), <code>command</code>, <code>outcome</code>, <code>q</code> (search words),
+          <code>from</code> / <code>to</code> (inclusive workspace calendar dates),
+          <code>entity</code>, <code>cursor</code>, and <code>limit</code> (default 50, maximum
+          100). Pass the returned cursor unchanged. Each item is a compact summary;
+          <code>GET /api/v1/logs/{id}</code> fetches its audit or attempt details. Responses are
+          no-store. Filters run before keyset pagination. Invalid filters and cursors return 400;
+          agents cannot access owner diagnostics.
+        </p>
+        <p>
+          Use <code>GET /api/v1/state?history=none</code> or <code>accord_query</code> with
+          <code>includeHistory: false</code> for compact current state. The legacy full-history
+          behavior remains available for existing clients. Authentication and mutation execution
+          always use compact reads internally.
+        </p>
+        <p>
+          REST/MCP rejected requests are recorded independently of saved audit changes. Successful
+          idempotent replays do not duplicate saved changes; each rejected retry is an observable
+          attempt. No raw request bodies, tokens, retry keys or provider errors are retained. See
+          <a href="logs.html">Logs</a> for capture boundaries, error interpretation, failure
+          fallback, and migration requirements.
+        </p>
+        <h2 id="workspace-agent-access">Workspace agent access</h2>
+        <p>
+          Credentials accept <code>accessMode: &quot;workspace&quot;</code> for agents only with
+          <code>assignments: []</code>. The mode is persisted as <code>access_mode</code> in owner
+          credential metadata and returned as <code>accessMode</code> on the authenticated actor.
+          Omitted modes retain assigned-record behavior. Workspace access includes future records
+          but never implies additional capabilities or People access. See
+          <a href="agent-guide.html#permissions-three-separate-checks">agent permissions</a> for
+          management capabilities and protected actions. Archive export and Logs remain owner-only.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/api.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

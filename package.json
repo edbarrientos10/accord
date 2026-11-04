@@ -1,0 +1,55 @@
+{
+  "name": "accord",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "bootstrap": "node --import tsx scripts/bootstrap.ts",
+    "backup": "node --import tsx scripts/backup.ts",
+    "restore": "node --import tsx scripts/restore.ts",
+    "agent:example": "node --import tsx examples/agent.ts",
+    "schema": "node --import tsx scripts/schema.ts",
+    "readiness": "node --import tsx scripts/readiness.ts",
+    "format": "prettier --write src scripts examples tests *.ts *.json docs/*.md docs/*.json docs/*.css README.md CONTRIBUTING.md SECURITY.md .github/workflows/*.yml TRADEMARKS.md THIRD_PARTY_NOTICES.md .github/ISSUE_TEMPLATE/*.yml .github/pull_request_template.md public/brand/*.md",
+    "format:check": "prettier --check src scripts examples tests *.ts *.json docs/*.md docs/*.json docs/*.css README.md CONTRIBUTING.md SECURITY.md .github/workflows/*.yml TRADEMARKS.md THIRD_PARTY_NOTICES.md .github/ISSUE_TEMPLATE/*.yml .github/pull_request_template.md public/brand/*.md",
+    "docs:generate": "node --import tsx scripts/docs.ts",
+    "docs:check": "node --import tsx scripts/docs.ts --check",
+    "prebuild": "npm run docs:generate"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/manrope": "^5.3.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.0.0",
+    "lucide-react": "^0.468.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@electric-sql/pglite": "^0.3.0",
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^5.0.4"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edbarrientos10/accord.git"
+  },
+  "homepage": "https://github.com/edbarrientos10/accord#readme"
+}

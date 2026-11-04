@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Accord product documentation for people and agents" />
+    <title>Installation · Accord Help</title>
+    <link rel="icon" href="/brand/accord-favicon-v2.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/brand/accord-icon-180-v2.png" />
+    <link rel="stylesheet" href="/help/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <header>
+      <a class="brand" href="/help/index.html"
+        ><img src="/brand/accord-logo-dark-v2.webp" alt="Accord" width="160" height="50" />
+        <small>HELP</small></a
+      >
+      <nav aria-label="Help navigation">
+        <a href="/help/user-guide.html">For people</a><a href="/help/agent-guide.html">For agents</a
+        ><a href="/help/troubleshooting.html">Troubleshooting</a><a href="/">Open workspace ↗</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="On this page">
+        <div class="desktop-contents">
+          <p class="eyebrow">ON THIS PAGE</p>
+          <nav aria-label="Guide sections">
+            <a href="#local-supabase">Local Supabase</a
+            ><a href="#managed-supabase-and-vercel">Managed Supabase and Vercel</a
+            ><a href="#generic-agent-integration">Generic agent integration</a
+            ><a href="#upgrading-the-workspace-redesign">Upgrading the workspace redesign</a
+            ><a href="#runtime-environment-on-vercel">Runtime environment on Vercel</a
+            ><a href="#owner-installation">Owner installation</a
+            ><a href="#documentation-publishing">Documentation publishing</a>
+          </nav>
+        </div>
+        <details class="mobile-contents">
+          <summary>On this page</summary>
+          <nav aria-label="Guide sections">
+            <a href="#local-supabase">Local Supabase</a
+            ><a href="#managed-supabase-and-vercel">Managed Supabase and Vercel</a
+            ><a href="#generic-agent-integration">Generic agent integration</a
+            ><a href="#upgrading-the-workspace-redesign">Upgrading the workspace redesign</a
+            ><a href="#runtime-environment-on-vercel">Runtime environment on Vercel</a
+            ><a href="#owner-installation">Owner installation</a
+            ><a href="#documentation-publishing">Documentation publishing</a>
+          </nav>
+        </details>
+        <hr />
+        <a href="/docs/install.md">Read Markdown ↗</a><a href="/llms.txt">Agent discovery ↗</a
+        ><a href="/docs/openapi.json">OpenAPI schema ↗</a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <p class="eyebrow">WORKSPACE HANDBOOK / ACCORD</p>
+        <h1 id="installation">Installation</h1>
+        <h2 id="local-supabase">Local Supabase</h2>
+        <p>
+          Install Node.js 22, npm, Supabase CLI <strong>2.58.5</strong> (the version verified by the
+          disposable installation check), and a Docker-compatible runtime. Newer CLI versions have
+          not been verified for this preview.
+        </p>
+        <ol>
+          <li>
+            Run <code>npm ci</code> and <code>supabase start</code> from the checkout. The included
+            config disables public signup globally and sets local Auth, API, database, and Studio
+            ports. The email provider remains enabled so the bootstrapped owner can sign in;
+            <code>auth.email.enable_signup=true</code> does not override
+            <code>auth.enable_signup=false</code>.
+          </li>
+          <li>
+            Copy <code>.env.example</code> to <code>.env.local</code>. Configure the local URL,
+            anonymous key, service-role key, and
+            <code>ACCORD_ORIGIN=http://localhost:3000</code> privately. Use
+            <code>supabase status</code> locally to obtain credentials; do not paste its output in
+            issues, chat, or public logs. Set <code>ACCORD_DEMO=false</code>.
+          </li>
+          <li>
+            Apply migrations with <code>supabase db reset</code>
+            <strong>only to the disposable local database</strong>. It replaces local data.
+            Migrations create private evidence storage and deny direct client writes.
+          </li>
+          <li>
+            Configure <code>ACCORD_OWNER_EMAIL</code>, <code>ACCORD_OWNER_PASSWORD</code> (12+
+            characters), and <code>ACCORD_OWNER_NAME</code> privately, then run
+            <code>npm run bootstrap</code>. Remove the bootstrap password from the environment
+            afterward.
+          </li>
+          <li>
+            Run <code>npm run dev</code>, sign in, and create an outcome. Add an agent identity in
+            Agents, assign it to the outcome, and issue a token restricted to the required
+            capabilities and that outcome.
+          </li>
+        </ol>
+        <p>
+          Installation scripts load <code>.env.local</code>, falling back to <code>.env</code>,
+          without printing its contents. Next.js loads <code>.env.local</code> independently. Shell
+          environment variables take precedence. Only <code>NEXT_PUBLIC_</code> values are included
+          in browser bundles; the service-role key must never use that prefix.
+        </p>
+        <h2 id="managed-supabase-and-vercel">Managed Supabase and Vercel</h2>
+        <p>
+          Use new dedicated pilot projects, or explicitly select empty existing projects. Keep
+          preview/test and production Supabase projects separate.
+        </p>
+        <ol>
+          <li>
+            Select the Supabase project and Vercel team/project. Configure
+            <code>SUPABASE_PROJECT_REF</code>, <code>VERCEL_ORG_ID</code>, and
+            <code>VERCEL_PROJECT_ID</code> in your private environment.
+            <code>npm run readiness</code> reports presence only, never values.
+          </li>
+          <li>
+            Link the exact Supabase project with
+            <code>supabase link --project-ref PROJECT_REF</code>. Inspect pending migrations with
+            <code>supabase db push --dry-run</code>; apply them with
+            <code>supabase db push</code> to the selected pilot project.
+          </li>
+          <li>
+            In Supabase Auth, disable new-user signup, configure the exact site URL and
+            <code>/reset-password</code> redirect, and configure reliable SMTP. Verify signup denial
+            and password recovery against the hosted instance. Local config does not change managed
+            Auth settings automatically.
+          </li>
+          <li>
+            Set the URL, anonymous key, server-only service-role key, and exact production
+            <code>ACCORD_ORIGIN</code> in Vercel. Bootstrap the configured owner using this
+            project&#39;s private environment. Set Node.js 22, framework Next.js, build
+            <code>npm run build</code>, install <code>npm ci</code>, and root directory to the
+            repository root.
+          </li>
+          <li>
+            Configure a separate preview Supabase project and origin, or enable the fictional
+            preview with <code>ACCORD_DEMO=true</code> and provide no live service key. Do not
+            expose the private pilot database to unreviewed preview builds.
+          </li>
+          <li>
+            Stage the pilot deployment, validate authentication, RLS, Storage, commands, and MCP,
+            then promote the validated production build. Protect the private repository and
+            deployment. MCP clients must also be allowed through any Vercel deployment protection;
+            an Accord token does not bypass it.
+          </li>
+        </ol>
+        <p>
+          No scheduler needs enabling. Recurring operations report executions from their existing
+          scheduler through Accord&#39;s API/MCP. Choose the function region near the Supabase
+          database before release.
+        </p>
+        <p>
+          The private evidence upload endpoint accepts files up to <strong>3 MiB</strong>. This fits
+          Vercel&#39;s
+          <a href="https://vercel.com/docs/functions/limitations">4.5 MB request limit</a>. Larger
+          evidence can be linked in its existing private source system. Scoped exports stream their
+          response; complete backups should run through the CLI.
+        </p>
+        <h2 id="generic-agent-integration">Generic agent integration</h2>
+        <p>
+          Configure a Streamable HTTP MCP client with URL <code>https://YOUR_HOST/mcp</code> and an
+          <code>Authorization: Bearer</code> header containing its private Accord agent token. Do
+          not use the Supabase service-role key as an agent credential.
+        </p>
+        <p>
+          The <a href="/docs/example-agent.ts">example client</a> reads
+          <code>ACCORD_MCP_URL</code> and <code>ACCORD_AGENT_TOKEN</code> from the environment. Run
+          <code>npm run agent:example -- query</code>. Assign and scope access explicitly; agents do
+          not inherit the human session or approval authority. OAuth onboarding is outside v1.
+        </p>
+        <h2 id="upgrading-the-workspace-redesign">Upgrading the workspace redesign</h2>
+        <p>
+          Apply <code>202610260001_projects_decisions.sql</code> before starting this application
+          version. Read
+          <a href="redesign.html#upgrade-and-recovery">the upgrade and recovery procedure</a> for
+          populated installations. Back up first and validate a staging copy; this repository does
+          not automatically migrate or deploy a hosted project.
+        </p>
+        <p>
+          For the People module, apply <code>202610260002_people.sql</code> after the projects
+          migration. See
+          <a href="people.html#migration-and-recovery">People migration and recovery</a> for the
+          ordered backup, staging verification, and credential steps. Existing tokens gain no
+          scopes.
+        </p>
+        <p>
+          For paginated activity and failed-attempt logs, apply
+          <code>202610260003_activity_logs.sql</code> after People and before starting this build.
+          It backfills existing audit summaries and adds the compact current-state read. See
+          <a href="logs.html#migration-and-recovery">activity log migration</a>. Hosted migration
+          and deployment remain separate from the local implementation.
+        </p>
+        <p>
+          For workspace-wide agent tokens, apply
+          <code>202610270001_workspace_agent_access.sql</code> after the activity-log migration.
+          Tokens still default to assigned access; workspace access must be selected explicitly. New
+          installations must apply all migrations in filename order.
+        </p>
+        <h2 id="runtime-environment-on-vercel">Runtime environment on Vercel</h2>
+        <p>Set these for the intended Production deployment. Configure Preview separately.</p>
+        <div
+          class="table-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Variable reference table 1"
+        >
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Variable</th>
+                <th scope="col">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>NEXT_PUBLIC_SUPABASE_URL</code></td>
+                <td><code>https://YOUR_PROJECT_REF.supabase.co</code></td>
+              </tr>
+              <tr>
+                <td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td>
+                <td>That project&#39;s public anonymous API key</td>
+              </tr>
+              <tr>
+                <td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+                <td>
+                  That project&#39;s server-only service-role key; store privately, never with a
+                  public prefix
+                </td>
+              </tr>
+              <tr>
+                <td><code>ACCORD_ORIGIN</code></td>
+                <td>
+                  Exact app origin, such as <code>https://accord.example.com</code>, with no path or
+                  trailing slash
+                </td>
+              </tr>
+              <tr>
+                <td><code>ACCORD_DEMO</code></td>
+                <td><code>false</code> for a real workspace</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Rebuild and redeploy after changing environment configuration. Public values are used by
+          the browser build. Use the same Supabase project for all three Supabase variables. CLI
+          credentials such as <code>SUPABASE_ACCESS_TOKEN</code>, <code>SUPABASE_DB_PASSWORD</code>,
+          <code>VERCEL_TOKEN</code>, and project/team IDs are not required by the deployed
+          application&#39;s runtime. No AI provider key is required. Do not put the owner password
+          in Vercel.
+        </p>
+        <h2 id="owner-installation">Owner installation</h2>
+        <p>
+          Migrations create the schema, not an owner login or workspace. New installations use
+          <code>npm run bootstrap</code> with private <code>ACCORD_OWNER_EMAIL</code>,
+          <code>ACCORD_OWNER_PASSWORD</code> (at least 12 characters), and optional
+          <code>ACCORD_OWNER_NAME</code>. The script creates a confirmed Auth user, then installs a
+          workspace and human identity atomically; it refuses an already installed workspace. Remove
+          the bootstrap password afterward.
+        </p>
+        <h3 id="if-the-owner-already-exists-in-supabase-auth">
+          If the owner already exists in Supabase Auth
+        </h3>
+        <p>
+          The current bootstrap script creates a new Auth user; it does not adopt an existing one.
+          Do not rerun it expecting an existing account to be linked automatically. An administrator
+          can install an existing, verified owner through the service-only
+          <code>accord_bootstrap</code> function. First verify the selected project, existing
+          account ID, and that no workspace exists. Do not automatically select a user by unverified
+          email or replace an existing owner. This is a privileged one-time installation operation,
+          not an agent capability.
+        </p>
+        <p>
+          Using Supabase SQL Editor with administrative access, substitute the explicitly verified
+          Auth UUID in this guarded transaction. It preserves the account and password:
+        </p>
+        <pre tabindex="0" aria-label="Code example"><code>begin;
+do $$
+declare
+  owner_id uuid := &#39;REPLACE_WITH_VERIFIED_AUTH_USER_UUID&#39;;
+begin
+  if exists (select 1 from public.workspaces) then
+    raise exception &#39;Workspace already installed; do not replace its owner&#39;;
+  end if;
+  if not exists (
+    select 1 from auth.users
+    where id = owner_id and email_confirmed_at is not null
+      and not coalesce(is_anonymous, false)
+  ) then
+    raise exception &#39;Expected a confirmed, non-anonymous owner account&#39;;
+  end if;
+  perform public.accord_bootstrap(
+    gen_random_uuid(), gen_random_uuid(), owner_id, &#39;Workspace owner&#39;
+  );
+end $$;
+commit;</code></pre>
+        <p>
+          The function itself serializes installation and refuses a second workspace. Verify that
+          <code>workspaces.owner_auth_user_id</code> and the human identity&#39;s
+          <code>body.authUserId</code> refer to that account, then sign in through the app. Never
+          give the administrative credential to a worker agent. If authentication still fails, use
+          <a href="troubleshooting.html">troubleshooting</a>.
+        </p>
+        <h2 id="documentation-publishing">Documentation publishing</h2>
+        <p>
+          The repository keeps canonical Markdown in <code>docs/</code>.
+          <code>npm run docs:generate</code> regenerates command metadata, OpenAPI, the static Help
+          site, and public agent documents from an explicit allowlist.
+          <code>npm run docs:check</code> detects drift without writing files. The normal production
+          build regenerates these artifacts through <code>prebuild</code>.
+        </p>
+        <p>
+          After deploying this build, Help is available at <code>/help/index.html</code>, with
+          Markdown at <code>/docs/</code>, discovery at <code>/llms.txt</code>, and a consolidated
+          guide at <code>/llms-full.txt</code>. These are public product documentation, contain no
+          workspace data, and work before sign-in. They do not authenticate callers or expand any
+          API permissions.
+        </p>
+        <footer>
+          Documentation describes the app; it does not grant access to private records.<br /><a
+            href="/help/index.html"
+            >All guides</a
+          >
+          · <a href="/docs/install.md">Markdown source</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
